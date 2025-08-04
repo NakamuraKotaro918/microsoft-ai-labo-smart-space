@@ -212,6 +212,326 @@ body {
     max-height: 300px;
 }
 
+/* 人物分析セクション */
+.person-analysis-section,
+.behavior-analysis-section {
+    background: #ffffff;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+}
+
+.person-analysis-section h3,
+.behavior-analysis-section h3 {
+    font-size: 1.4rem;
+    color: #2c3e50;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* SONY ITRIOS データグリッド */
+.itrios-data-grid,
+.gemini-analysis-grid {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 30px;
+    margin-bottom: 20px;
+}
+
+.detection-summary,
+.analysis-summary {
+    background: linear-gradient(135deg, #f8f9fa, #ffffff);
+    border-radius: 10px;
+    padding: 20px;
+    border-left: 4px solid #3498db;
+}
+
+.detection-summary h4,
+.analysis-summary h4 {
+    font-size: 1.1rem;
+    color: #2c3e50;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.detection-stats,
+.analysis-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.detection-item,
+.analysis-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #ecf0f1;
+}
+
+.detection-item:last-child,
+.analysis-item:last-child {
+    border-bottom: none;
+}
+
+.detection-label,
+.analysis-label {
+    font-size: 0.9rem;
+    color: #7f8c8d;
+    font-weight: 500;
+}
+
+.detection-value,
+.analysis-value {
+    font-size: 1rem;
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+/* 人物リスト */
+.person-list-container,
+.behavior-insights-container {
+    background: linear-gradient(135deg, #f8f9fa, #ffffff);
+    border-radius: 10px;
+    padding: 20px;
+    border-left: 4px solid #e74c3c;
+}
+
+.person-list-container h4,
+.behavior-insights-container h4 {
+    font-size: 1.1rem;
+    color: #2c3e50;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.person-list {
+    max-height: 400px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.person-card {
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-left: 3px solid #3498db;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.person-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.person-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.person-id {
+    font-size: 0.9rem;
+    color: #7f8c8d;
+    font-weight: 500;
+}
+
+.person-timestamp {
+    font-size: 0.8rem;
+    color: #95a5a6;
+}
+
+.person-attributes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 8px;
+}
+
+.attribute-item {
+    text-align: center;
+    padding: 6px;
+    background: #f8f9fa;
+    border-radius: 6px;
+}
+
+.attribute-label {
+    font-size: 0.7rem;
+    color: #7f8c8d;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.attribute-value {
+    font-size: 0.9rem;
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.confidence-indicator {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    margin-left: 5px;
+}
+
+.confidence-high {
+    background: #d5f4e6;
+    color: #27ae60;
+}
+
+.confidence-medium {
+    background: #ffeaa7;
+    color: #f39c12;
+}
+
+.confidence-low {
+    background: #fadbd8;
+    color: #e74c3c;
+}
+
+/* 行動インサイト */
+.behavior-insights {
+    max-height: 400px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.insight-card {
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-left: 3px solid #e74c3c;
+}
+
+.insight-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.insight-person-id {
+    font-size: 0.9rem;
+    color: #7f8c8d;
+    font-weight: 500;
+}
+
+.insight-confidence {
+    font-size: 0.8rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: #d5f4e6;
+    color: #27ae60;
+    font-weight: 600;
+}
+
+.insight-content {
+    margin-bottom: 10px;
+}
+
+.insight-behavior {
+    font-size: 0.9rem;
+    color: #2c3e50;
+    line-height: 1.4;
+    margin-bottom: 8px;
+}
+
+.insight-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.insight-tag {
+    padding: 3px 8px;
+    background: #ecf0f1;
+    color: #7f8c8d;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 500;
+}
+
+.insight-tag.primary {
+    background: #3498db;
+    color: white;
+}
+
+.insight-tag.secondary {
+    background: #e74c3c;
+    color: white;
+}
+
+/* 統合行動パターン分析 */
+.integrated-behavior-analysis {
+    background: #ffffff;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    margin-bottom: 40px;
+}
+
+.integrated-behavior-analysis h3 {
+    font-size: 1.3rem;
+    color: #2c3e50;
+    margin-bottom: 20px;
+    text-align: center;
+    font-weight: 600;
+}
+
+/* リアルタイム更新インジケーター */
+.realtime-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.8rem;
+    color: #27ae60;
+    margin-left: 10px;
+}
+
+.realtime-dot {
+    width: 8px;
+    height: 8px;
+    background: #27ae60;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .itrios-data-grid,
+    .gemini-analysis-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .person-attributes {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .insight-tags {
+        justify-content: flex-start;
+    }
+}
+
 /* 行動パターン分析 */
 .behavior-analysis {
     background: #ffffff;
@@ -388,6 +708,17 @@ body {
         gap: 10px;
         text-align: center;
     }
+}
+
+/* データなしメッセージ */
+.no-data-message {
+    text-align: center;
+    color: #7f8c8d;
+    font-style: italic;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 2px dashed #ecf0f1;
 }
 
 /* アニメーション */

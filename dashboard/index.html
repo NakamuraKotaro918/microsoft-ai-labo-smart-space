@@ -60,30 +60,99 @@
                     <canvas id="hourly-visitors-chart"></canvas>
                 </div>
 
-                <!-- 行動パターン分析 -->
-                <div class="behavior-analysis">
-                    <h3>行動パターン分析</h3>
+                <!-- SONY ITRIOS 人物認識データ -->
+                <div class="person-analysis-section">
+                    <h3>🎥 SONY ITRIOS 人物認識データ</h3>
+                    <div class="itrios-data-grid">
+                        <div class="detection-summary">
+                            <h4>検出状況</h4>
+                            <div class="detection-stats">
+                                <div class="detection-item">
+                                    <span class="detection-label">検出人数</span>
+                                    <span class="detection-value" id="itrios-detected-count">0</span>
+                                </div>
+                                <div class="detection-item">
+                                    <span class="detection-label">認識精度</span>
+                                    <span class="detection-value" id="itrios-accuracy">95%</span>
+                                </div>
+                                <div class="detection-item">
+                                    <span class="detection-label">最終更新</span>
+                                    <span class="detection-value" id="itrios-last-update">--:--</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="person-list-container">
+                            <h4>個別人物データ</h4>
+                            <div class="person-list" id="itrios-person-list">
+                                <!-- 動的に生成される人物データ -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SmartPhone 人物特徴分析データ -->
+                <div class="behavior-analysis-section">
+                    <h3>📱 SmartPhone + Google Gemini 人物特徴分析</h3>
+                    <div class="gemini-analysis-grid">
+                        <div class="analysis-summary">
+                            <h4>分析状況</h4>
+                            <div class="analysis-stats">
+                                <div class="analysis-item">
+                                    <span class="analysis-label">分析対象数</span>
+                                    <span class="analysis-value" id="gemini-analyzed-count">0</span>
+                                </div>
+                                <div class="analysis-item">
+                                    <span class="analysis-label">処理時間</span>
+                                    <span class="analysis-value" id="gemini-processing-time">0.0s</span>
+                                </div>
+                                <div class="analysis-item">
+                                    <span class="analysis-label">信頼度</span>
+                                    <span class="analysis-value" id="gemini-confidence">90%</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="behavior-insights-container">
+                            <h4>行動・特徴分析結果</h4>
+                            <div class="behavior-insights" id="gemini-behavior-insights">
+                                <!-- 動的に生成される行動分析データ -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 統合行動パターン分析 -->
+                <div class="integrated-behavior-analysis">
+                    <h3>📊 統合行動パターン分析</h3>
                     <div class="behavior-grid">
                         <div class="behavior-item">
                             <span class="behavior-label">展示物への関心度</span>
                             <div class="progress-bar">
-                                <div class="progress-fill" style="width: 75%"></div>
+                                <div class="progress-fill" id="interest-level-bar" style="width: 75%"></div>
                             </div>
-                            <span class="behavior-value">75%</span>
+                            <span class="behavior-value" id="interest-level-value">75%</span>
                         </div>
                         <div class="behavior-item">
                             <span class="behavior-label">平均移動距離</span>
                             <div class="progress-bar">
-                                <div class="progress-fill" style="width: 60%"></div>
+                                <div class="progress-fill" id="movement-distance-bar" style="width: 60%"></div>
                             </div>
-                            <span class="behavior-value">12.5m</span>
+                            <span class="behavior-value" id="movement-distance-value">12.5m</span>
                         </div>
                         <div class="behavior-item">
                             <span class="behavior-label">グループ行動率</span>
                             <div class="progress-bar">
-                                <div class="progress-fill" style="width: 45%"></div>
+                                <div class="progress-fill" id="group-behavior-bar" style="width: 45%"></div>
                             </div>
-                            <span class="behavior-value">45%</span>
+                            <span class="behavior-value" id="group-behavior-value">45%</span>
+                        </div>
+                        <div class="behavior-item">
+                            <span class="behavior-label">滞在時間（平均）</span>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="stay-duration-bar" style="width: 65%"></div>
+                            </div>
+                            <span class="behavior-value" id="stay-duration-value">8.5分</span>
                         </div>
                     </div>
                 </div>
@@ -183,5 +252,6 @@
     <script src="scripts/main.js"></script>
     <script src="scripts/charts.js"></script>
     <script src="scripts/data-service.js"></script>
+    <script src="scripts/person-analysis.js"></script>
 </body>
 </html>

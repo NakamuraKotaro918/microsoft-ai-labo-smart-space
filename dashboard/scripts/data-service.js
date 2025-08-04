@@ -55,6 +55,9 @@ class DataService {
 
             this.updateDataCache({ entrance: entranceData, room: roomData });
             this.notifyDataUpdate({ entrance: entranceData, room: roomData });
+            
+            // 人物分析データも生成・通知
+            this.generateAndNotifyPersonData();
         } catch (error) {
             console.error('Error fetching data:', error);
             // エラー時はモックデータを生成
@@ -116,6 +119,9 @@ class DataService {
         
         this.updateDataCache(mockData);
         this.notifyDataUpdate(mockData);
+        
+        // 人物分析データも生成・通知
+        this.generateAndNotifyPersonData();
     }
 
     // モックエントランスデータの生成
@@ -271,16 +277,121 @@ class DataService {
         }
     }
 
-    // 接続状態の確認
+    // 接続状態の確認（ローカル版では常にtrue）
     isConnected() {
-        return this.websocket && this.websocket.readyState === WebSocket.OPEN;
+        return this.reconnectAttempts <= this.maxReconnectAttempts;
     }
 
-    // WebSocket接続の終了
-    disconnect() {
-        if (this.websocket) {
-            this.websocket.close();
-            this.websocket = null;
+    // 人物分析データの生成と通知
+    generateAndNotifyPersonData() {
+        // 30%の確率で人物データを生成（リアルな感じにするため）
+        if (Math.random() < 0.3) {
+            const personData = this.generateMockPersonData();
+            
+            // 人物データ更新イベントを発火
+            const event = new CustomEvent('personDataUpdate', { detail: personData });
+            document.dispatchEvent(event);
         }
+    }
+
+    // モック人物データの生成
+    generateMockPersonData() {
+        const currentTime = new Date();
+        const personCount = Math.floor(Math.random() * 3) + 1; // 1-3人
+        
+        const itriosPersons = [];
+        const geminiPersons = [];
+        
+        for (let i = 0; i < personCount; i++) {
+            const personId = this.generatePersonId();
+            
+            // SONY ITRIOS データ
+            const age = Math.floor(Math.random() * 60) + 20; // 20-80歳
+            const gender = Math.random() > 0.5 ? 'male' : 'female';
+            const ageRange = this.getAgeRange(age);
+            
+            itriosPersons.push({
+                id: personId,
+                age: age,
+                ageRange: ageRange,
+                gender: gender,
+                confidence: {
+                    overall: Math.random() * 0.3 + 0.7, // 0.7-1.0
+                    age: Math.random() * 0.2 + 0.8,     // 0.8-1.0
+                    gender: Math.random() * 0.2 + 0.8   // 0.8-1.0
+                },
+                position: {
+                    x: Math.floor(Math.random() * 400) + 100,
+                    y: Math.floor(Math.random() * 300) + 100
+                }
+            });
+            
+            // Google Gemini データ
+            const behaviors = [
+                '展示物を詳しく観察している',
+                'スマートフォンで写真を撮影',
+                '他の来場者と会話中',
+                'パンフレットを読んでいる',
+                'ゆっくりと歩き回っている',
+                '特定の展示に長時間滞在',
+                'メモを取りながら見学'
+            ];
+            
+            const emotions = ['興味深い', '楽しそう', '集中している', '驚いている', '満足している'];
+            const traits = ['好奇心旺盛', '慎重', '社交的', '分析的', '積極的'];
+            
+            geminiPersons.push({
+                personId: personId,
+                behavior: {
+                    action: behaviors[Math.floor(Math.random() * behaviors.length)],
+                    movementDistance: Math.round((Math.random() * 20 + 5) * 10) / 10,
+                    stayDuration: Math.round((Math.random() * 15 + 5) * 10) / 10,
+                    isActive: Math.random() > 0.3
+                },
+                characteristics: {
+                    interestLevel: Math.floor(Math.random() * 40) + 60, // 60-100
+                    primaryTrait: traits[Math.floor(Math.random() * traits.length)],
+                    showsInterest: Math.random() > 0.2
+                },
+                emotions: {
+                    primary: emotions[Math.floor(Math.random() * emotions.length)],
+                    isPositive: Math.random() > 0.2
+                },
+                interactions: {
+                    isGroupBehavior: Math.random() > 0.6
+                },
+                confidence: Math.floor(Math.random() * 20) + 80, // 80-100
+                processingTime: Math.round((Math.random() * 3 + 1) * 10) / 10 // 1.0-4.0秒
+            });
+        }
+        
+        return {
+            itrios: {
+                detectedPersons: itriosPersons,
+                accuracy: Math.floor(Math.random() * 10) + 90, // 90-100%
+                timestamp: currentTime
+            },
+            gemini: {
+                analyzedPersons: geminiPersons,
+                averageProcessingTime: Math.round((Math.random() * 2 + 1.5) * 10) / 10,
+                averageConfidence: Math.floor(Math.random() * 15) + 85, // 85-100%
+                timestamp: currentTime
+            }
+        };
+    }
+
+    // ヘルパーメソッド
+    generatePersonId() {
+        return 'P' + Date.now().toString(36) + Math.random().toString(36).substr(2, 3);
+    }
+
+    getAgeRange(age) {
+        if (age < 20) return '10代';
+        if (age < 30) return '20代';
+        if (age < 40) return '30代';
+        if (age < 50) return '40代';
+        if (age < 60) return '50代';
+        if (age < 70) return '60代';
+        return '70代以上';
     }
 }

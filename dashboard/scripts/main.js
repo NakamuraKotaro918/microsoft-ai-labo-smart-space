@@ -5,6 +5,7 @@ class SmartSpaceDashboard {
         this.updateInterval = 30000; // 30秒間隔で更新
         this.charts = {};
         this.dataService = new DataService();
+        this.personAnalysisManager = new PersonAnalysisManager();
         
         this.init();
     }
