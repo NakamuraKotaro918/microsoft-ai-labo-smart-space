@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Microsoft AI Labo スマート空間最適化ダッシュボード</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3/index.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Microsoft AI Labo スマート空間最適化システム</h1>
+            <div class="nav-tabs">
+                <button class="tab-button active" onclick="showTab('entrance')">エントランスモニター</button>
+                <button class="tab-button" onclick="showTab('room')">個人開発部屋モニター</button>
+            </div>
+        </header>
+
+        <!-- エントランスモニター -->
+        <div id="entrance-tab" class="tab-content active">
+            <div class="dashboard-section">
+                <h2>エントランス来場者モニター</h2>
+                
+                <!-- リアルタイム統計 -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>現在の来場者数</h3>
+                        <div class="stat-value" id="current-visitors">0</div>
+                        <div class="stat-unit">人</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>本日の累計来場者数</h3>
+                        <div class="stat-value" id="daily-visitors">0</div>
+                        <div class="stat-unit">人</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>平均滞在時間</h3>
+                        <div class="stat-value" id="avg-stay-time">0</div>
+                        <div class="stat-unit">分</div>
+                    </div>
+                </div>
+
+                <!-- 来場者属性分析 -->
+                <div class="charts-grid">
+                    <div class="chart-container">
+                        <h3>年齢層分布</h3>
+                        <canvas id="age-distribution-chart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3>性別分布</h3>
+                        <canvas id="gender-distribution-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 時間別来場者数 -->
+                <div class="chart-container full-width">
+                    <h3>時間別来場者数（本日）</h3>
+                    <canvas id="hourly-visitors-chart"></canvas>
+                </div>
+
+                <!-- 行動パターン分析 -->
+                <div class="behavior-analysis">
+                    <h3>行動パターン分析</h3>
+                    <div class="behavior-grid">
+                        <div class="behavior-item">
+                            <span class="behavior-label">展示物への関心度</span>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 75%"></div>
+                            </div>
+                            <span class="behavior-value">75%</span>
+                        </div>
+                        <div class="behavior-item">
+                            <span class="behavior-label">平均移動距離</span>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 60%"></div>
+                            </div>
+                            <span class="behavior-value">12.5m</span>
+                        </div>
+                        <div class="behavior-item">
+                            <span class="behavior-label">グループ行動率</span>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 45%"></div>
+                            </div>
+                            <span class="behavior-value">45%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 個人開発部屋モニター -->
+        <div id="room-tab" class="tab-content">
+            <div class="dashboard-section">
+                <h2>個人開発部屋環境モニター</h2>
+                
+                <!-- 環境データ -->
+                <div class="stats-grid">
+                    <div class="stat-card temperature">
+                        <h3>温度</h3>
+                        <div class="stat-value" id="temperature">22.5</div>
+                        <div class="stat-unit">°C</div>
+                        <div class="stat-status optimal">適正</div>
+                    </div>
+                    <div class="stat-card humidity">
+                        <h3>湿度</h3>
+                        <div class="stat-value" id="humidity">55</div>
+                        <div class="stat-unit">%</div>
+                        <div class="stat-status optimal">適正</div>
+                    </div>
+                    <div class="stat-card co2">
+                        <h3>CO2濃度</h3>
+                        <div class="stat-value" id="co2">450</div>
+                        <div class="stat-unit">ppm</div>
+                        <div class="stat-status optimal">良好</div>
+                    </div>
+                    <div class="stat-card occupancy">
+                        <h3>利用状況</h3>
+                        <div class="stat-value" id="room-occupancy">使用中</div>
+                        <div class="stat-unit"></div>
+                        <div class="stat-status occupied">在室</div>
+                    </div>
+                </div>
+
+                <!-- 環境データトレンド -->
+                <div class="charts-grid">
+                    <div class="chart-container">
+                        <h3>温度・湿度トレンド（24時間）</h3>
+                        <canvas id="temp-humidity-chart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3>CO2濃度トレンド（24時間）</h3>
+                        <canvas id="co2-trend-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 利用率分析 -->
+                <div class="chart-container full-width">
+                    <h3>部屋利用率（週間）</h3>
+                    <canvas id="room-usage-chart"></canvas>
+                </div>
+
+                <!-- 空調最適化提案 -->
+                <div class="optimization-panel">
+                    <h3>空調最適化提案</h3>
+                    <div class="optimization-grid">
+                        <div class="optimization-item">
+                            <div class="optimization-icon">🌡️</div>
+                            <div class="optimization-content">
+                                <h4>温度調整</h4>
+                                <p>現在の温度は適正範囲内です。エネルギー効率を考慮し、設定温度を1°C上げることを推奨します。</p>
+                            </div>
+                        </div>
+                        <div class="optimization-item">
+                            <div class="optimization-icon">💨</div>
+                            <div class="optimization-content">
+                                <h4>換気推奨</h4>
+                                <p>CO2濃度が上昇傾向にあります。15分後に換気を行うことを推奨します。</p>
+                            </div>
+                        </div>
+                        <div class="optimization-item">
+                            <div class="optimization-icon">💡</div>
+                            <div class="optimization-content">
+                                <h4>照明最適化</h4>
+                                <p>部屋の利用パターンから、自動調光設定の調整を推奨します。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- データ更新情報 -->
+        <footer class="footer">
+            <div class="update-info">
+                <span>最終更新: <span id="last-update">2025-08-04 08:00:00</span></span>
+                <span class="connection-status" id="connection-status">接続中</span>
+            </div>
+        </footer>
+    </div>
+
+    <script src="scripts/main.js"></script>
+    <script src="scripts/charts.js"></script>
+    <script src="scripts/data-service.js"></script>
+</body>
+</html>
