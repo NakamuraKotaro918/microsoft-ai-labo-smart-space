@@ -457,6 +457,24 @@ function showTab(tabName) {
     }
 }
 
+// デモ用人物データ生成
+function generateDemoPersonData() {
+    if (window.dashboard && window.dashboard.personAnalysisManager) {
+        window.dashboard.personAnalysisManager.generateMockData();
+        console.log('デモ人物データを生成しました');
+    }
+}
+
+// 人物データクリア
+function clearPersonData() {
+    if (window.dashboard && window.dashboard.personAnalysisManager) {
+        window.dashboard.personAnalysisManager.itriosData.clear();
+        window.dashboard.personAnalysisManager.geminiData.clear();
+        window.dashboard.personAnalysisManager.updateDisplay();
+        console.log('人物データをクリアしました');
+    }
+}
+
 // アプリケーション初期化
 document.addEventListener('DOMContentLoaded', () => {
     window.dashboard = new SmartSpaceDashboard();
