@@ -15,6 +15,7 @@
             <div class="nav-tabs">
                 <button class="tab-button active" onclick="showTab('entrance')">エントランスモニター</button>
                 <button class="tab-button" onclick="showTab('room')">個人開発部屋モニター</button>
+                <button class="tab-button" onclick="showTab('environment')">環境データ分析</button>
             </div>
         </header>
 
@@ -60,102 +61,92 @@
                     <canvas id="hourly-visitors-chart"></canvas>
                 </div>
 
-                <!-- SONY ITRIOS 人物認識データ -->
-                <div class="person-analysis-section">
-                    <h3>🎥 SONY ITRIOS 人物認識データ</h3>
-                    <div class="itrios-data-grid">
-                        <div class="detection-summary">
-                            <h4>検出状況</h4>
-                            <div class="detection-stats">
-                                <div class="detection-item">
-                                    <span class="detection-label">検出人数</span>
-                                    <span class="detection-value" id="itrios-detected-count">0</span>
+                <!-- 統合人物分析システム -->
+                <div class="integrated-person-analysis">
+                    <h3>👥 統合人物分析システム</h3>
+                    
+                    <!-- システム状況概要 -->
+                    <div class="analysis-overview">
+                        <div class="overview-stats">
+                            <div class="stat-item">
+                                <div class="stat-icon">🎥</div>
+                                <div class="stat-content">
+                                    <div class="stat-label">ITRIOS検出</div>
+                                    <div class="stat-value" id="itrios-detected-count">0</div>
+                                    <div class="stat-accuracy" id="itrios-accuracy">95%</div>
                                 </div>
-                                <div class="detection-item">
-                                    <span class="detection-label">認識精度</span>
-                                    <span class="detection-value" id="itrios-accuracy">95%</span>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-icon">📱</div>
+                                <div class="stat-content">
+                                    <div class="stat-label">Gemini分析</div>
+                                    <div class="stat-value" id="gemini-analyzed-count">0</div>
+                                    <div class="stat-accuracy" id="gemini-confidence">90%</div>
                                 </div>
-                                <div class="detection-item">
-                                    <span class="detection-label">最終更新</span>
-                                    <span class="detection-value" id="itrios-last-update">--:--</span>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-icon">🔗</div>
+                                <div class="stat-content">
+                                    <div class="stat-label">データ連携</div>
+                                    <div class="stat-value" id="linked-persons">0</div>
+                                    <div class="stat-accuracy" id="link-accuracy">98%</div>
+                                </div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-icon">⏱️</div>
+                                <div class="stat-content">
+                                    <div class="stat-label">処理時間</div>
+                                    <div class="stat-value" id="avg-processing-time">2.3s</div>
+                                    <div class="stat-accuracy" id="last-update-time">--:--</div>
                                 </div>
                             </div>
                         </div>
-                        
-                        <div class="person-list-container">
-                            <h4>個別人物データ</h4>
-                            <div class="person-list" id="itrios-person-list">
-                                <!-- 動的に生成される人物データ -->
+                    </div>
+
+                    <!-- 人物分析フィルター -->
+                    <div class="analysis-filters">
+                        <div class="filter-group">
+                            <label>表示フィルター:</label>
+                            <button class="filter-btn active" data-filter="all" onclick="filterPersons('all')">全て</button>
+                            <button class="filter-btn" data-filter="active" onclick="filterPersons('active')">アクティブ</button>
+                            <button class="filter-btn" data-filter="interested" onclick="filterPersons('interested')">関心高</button>
+                            <button class="filter-btn" data-filter="group" onclick="filterPersons('group')">グループ</button>
+                        </div>
+                        <div class="filter-group">
+                            <label>並び順:</label>
+                            <select id="sort-persons" onchange="sortPersons(this.value)">
+                                <option value="detection-time">検出時刻順</option>
+                                <option value="interest-level">関心度順</option>
+                                <option value="stay-duration">滞在時間順</option>
+                                <option value="confidence">信頼度順</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 統合人物データリスト -->
+                    <div class="integrated-person-list" id="integrated-person-list">
+                        <!-- 動的に生成される統合人物データ -->
+                    </div>
+
+                    <!-- 人物分析詳細モーダル -->
+                    <div class="person-detail-modal" id="person-detail-modal">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h4 id="modal-person-title">人物詳細分析</h4>
+                                <button class="modal-close" onclick="closePersonModal()">&times;</button>
+                            </div>
+                            <div class="modal-body" id="modal-person-content">
+                                <!-- 詳細データが動的に挿入される -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- SmartPhone 人物特徴分析データ -->
-                <div class="behavior-analysis-section">
-                    <h3>📱 SmartPhone + Google Gemini 人物特徴分析</h3>
-                    <div class="gemini-analysis-grid">
-                        <div class="analysis-summary">
-                            <h4>分析状況</h4>
-                            <div class="analysis-stats">
-                                <div class="analysis-item">
-                                    <span class="analysis-label">分析対象数</span>
-                                    <span class="analysis-value" id="gemini-analyzed-count">0</span>
-                                </div>
-                                <div class="analysis-item">
-                                    <span class="analysis-label">処理時間</span>
-                                    <span class="analysis-value" id="gemini-processing-time">0.0s</span>
-                                </div>
-                                <div class="analysis-item">
-                                    <span class="analysis-label">信頼度</span>
-                                    <span class="analysis-value" id="gemini-confidence">90%</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="behavior-insights-container">
-                            <h4>行動・特徴分析結果</h4>
-                            <div class="behavior-insights" id="gemini-behavior-insights">
-                                <!-- 動的に生成される行動分析データ -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- 統合行動パターン分析 -->
-                <div class="integrated-behavior-analysis">
-                    <h3>📊 統合行動パターン分析</h3>
-                    <div class="behavior-grid">
-                        <div class="behavior-item">
-                            <span class="behavior-label">展示物への関心度</span>
-                            <div class="progress-bar">
-                                <div class="progress-fill" id="interest-level-bar" style="width: 75%"></div>
-                            </div>
-                            <span class="behavior-value" id="interest-level-value">75%</span>
-                        </div>
-                        <div class="behavior-item">
-                            <span class="behavior-label">平均移動距離</span>
-                            <div class="progress-bar">
-                                <div class="progress-fill" id="movement-distance-bar" style="width: 60%"></div>
-                            </div>
-                            <span class="behavior-value" id="movement-distance-value">12.5m</span>
-                        </div>
-                        <div class="behavior-item">
-                            <span class="behavior-label">グループ行動率</span>
-                            <div class="progress-bar">
-                                <div class="progress-fill" id="group-behavior-bar" style="width: 45%"></div>
-                            </div>
-                            <span class="behavior-value" id="group-behavior-value">45%</span>
-                        </div>
-                        <div class="behavior-item">
-                            <span class="behavior-label">滞在時間（平均）</span>
-                            <div class="progress-bar">
-                                <div class="progress-fill" id="stay-duration-bar" style="width: 65%"></div>
-                            </div>
-                            <span class="behavior-value" id="stay-duration-value">8.5分</span>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -164,75 +155,530 @@
             <div class="dashboard-section">
                 <h2>個人開発部屋環境モニター</h2>
                 
+                <!-- 部屋情報 -->
+                <div class="room-info-panel">
+                    <div class="room-header">
+                        <div class="room-icon">🏠</div>
+                        <div class="room-details">
+                            <h3>開発ルーム A-101</h3>
+                            <p>個人開発専用スペース</p>
+                        </div>
+                        <div class="room-status">
+                            <div class="status-indicator" id="room-status-indicator"></div>
+                            <span id="room-status-text">使用中</span>
+                        </div>
+                    </div>
+                </div>
+                
                 <!-- 環境データ -->
                 <div class="stats-grid">
                     <div class="stat-card temperature">
-                        <h3>温度</h3>
-                        <div class="stat-value" id="temperature">22.5</div>
-                        <div class="stat-unit">°C</div>
-                        <div class="stat-status optimal">適正</div>
+                        <div class="stat-header">
+                            <div class="stat-icon">🌡️</div>
+                            <h3>温度</h3>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="room-temperature">22.5</div>
+                            <div class="stat-unit">°C</div>
+                            <div class="stat-status optimal" id="temperature-status">適正</div>
+                            <div class="stat-trend" id="temperature-trend">→ 安定</div>
+                        </div>
                     </div>
+                    
                     <div class="stat-card humidity">
-                        <h3>湿度</h3>
-                        <div class="stat-value" id="humidity">55</div>
-                        <div class="stat-unit">%</div>
-                        <div class="stat-status optimal">適正</div>
+                        <div class="stat-header">
+                            <div class="stat-icon">💧</div>
+                            <h3>湿度</h3>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="room-humidity">55</div>
+                            <div class="stat-unit">%</div>
+                            <div class="stat-status optimal" id="humidity-status">適正</div>
+                            <div class="stat-trend" id="humidity-trend">→ 安定</div>
+                        </div>
                     </div>
+                    
                     <div class="stat-card co2">
-                        <h3>CO2濃度</h3>
-                        <div class="stat-value" id="co2">450</div>
-                        <div class="stat-unit">ppm</div>
-                        <div class="stat-status optimal">良好</div>
+                        <div class="stat-header">
+                            <div class="stat-icon">🌬️</div>
+                            <h3>CO2濃度</h3>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="room-co2">450</div>
+                            <div class="stat-unit">ppm</div>
+                            <div class="stat-status optimal" id="co2-status">良好</div>
+                            <div class="stat-trend" id="co2-trend">↗ 微増</div>
+                        </div>
                     </div>
-                    <div class="stat-card occupancy">
-                        <h3>利用状況</h3>
-                        <div class="stat-value" id="room-occupancy">使用中</div>
-                        <div class="stat-unit"></div>
-                        <div class="stat-status occupied">在室</div>
+                    
+                    <div class="stat-card air-quality">
+                        <div class="stat-header">
+                            <div class="stat-icon">🍃</div>
+                            <h3>空気質</h3>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="room-air-quality">良好</div>
+                            <div class="stat-unit"></div>
+                            <div class="stat-status optimal" id="air-quality-status">快適</div>
+                            <div class="stat-trend" id="air-quality-trend">→ 安定</div>
+                        </div>
                     </div>
                 </div>
 
                 <!-- 環境データトレンド -->
-                <div class="charts-grid">
-                    <div class="chart-container">
-                        <h3>温度・湿度トレンド（24時間）</h3>
-                        <canvas id="temp-humidity-chart"></canvas>
-                    </div>
-                    <div class="chart-container">
-                        <h3>CO2濃度トレンド（24時間）</h3>
-                        <canvas id="co2-trend-chart"></canvas>
+                <div class="charts-section">
+                    <h3>📈 環境データトレンド</h3>
+                    <div class="charts-grid">
+                        <div class="chart-container">
+                            <h4>温度・湿度（過去24時間）</h4>
+                            <canvas id="room-temp-humidity-chart"></canvas>
+                        </div>
+                        <div class="chart-container">
+                            <h4>CO2濃度（過去24時間）</h4>
+                            <canvas id="room-co2-trend-chart"></canvas>
+                        </div>
                     </div>
                 </div>
 
-                <!-- 利用率分析 -->
-                <div class="chart-container full-width">
-                    <h3>部屋利用率（週間）</h3>
-                    <canvas id="room-usage-chart"></canvas>
+                <!-- 利用状況分析 -->
+                <div class="usage-analysis-section">
+                    <h3>📊 部屋利用状況分析</h3>
+                    <div class="usage-stats-grid">
+                        <div class="usage-stat-card">
+                            <div class="usage-stat-header">
+                                <div class="usage-stat-icon">⏰</div>
+                                <h4>今日の利用時間</h4>
+                            </div>
+                            <div class="usage-stat-content">
+                                <div class="usage-stat-value" id="today-usage-hours">6.5</div>
+                                <div class="usage-stat-unit">時間</div>
+                                <div class="usage-stat-detail">開始: 09:30 | 現在継続中</div>
+                            </div>
+                        </div>
+                        
+                        <div class="usage-stat-card">
+                            <div class="usage-stat-header">
+                                <div class="usage-stat-icon">📅</div>
+                                <h4>週間利用率</h4>
+                            </div>
+                            <div class="usage-stat-content">
+                                <div class="usage-stat-value" id="weekly-usage-rate">78</div>
+                                <div class="usage-stat-unit">%</div>
+                                <div class="usage-stat-detail">平均 6.2時間/日</div>
+                            </div>
+                        </div>
+                        
+                        <div class="usage-stat-card">
+                            <div class="usage-stat-header">
+                                <div class="usage-stat-icon">🎯</div>
+                                <h4>生産性指数</h4>
+                            </div>
+                            <div class="usage-stat-content">
+                                <div class="usage-stat-value" id="productivity-index">85</div>
+                                <div class="usage-stat-unit">点</div>
+                                <div class="usage-stat-detail">環境品質ベース</div>
+                            </div>
+                        </div>
+                        
+                        <div class="usage-stat-card">
+                            <div class="usage-stat-header">
+                                <div class="usage-stat-icon">⚡</div>
+                                <h4>エネルギー効率</h4>
+                            </div>
+                            <div class="usage-stat-content">
+                                <div class="usage-stat-value" id="energy-efficiency">92</div>
+                                <div class="usage-stat-unit">%</div>
+                                <div class="usage-stat-detail">前月比 +3%</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 利用パターンチャート -->
+                    <div class="chart-container full-width">
+                        <h4>週間利用パターン</h4>
+                        <canvas id="room-usage-pattern-chart"></canvas>
+                    </div>
                 </div>
 
-                <!-- 空調最適化提案 -->
-                <div class="optimization-panel">
-                    <h3>空調最適化提案</h3>
-                    <div class="optimization-grid">
-                        <div class="optimization-item">
-                            <div class="optimization-icon">🌡️</div>
-                            <div class="optimization-content">
-                                <h4>温度調整</h4>
-                                <p>現在の温度は適正範囲内です。エネルギー効率を考慮し、設定温度を1°C上げることを推奨します。</p>
+                <!-- 環境制御・最適化 -->
+                <div class="room-control-section">
+                    <h3>🎛️ 環境制御・最適化</h3>
+                    <div class="control-optimization-grid">
+                        <div class="control-panel">
+                            <h4>環境制御</h4>
+                            <div class="control-items">
+                                <div class="control-item">
+                                    <label>目標温度</label>
+                                    <div class="control-input">
+                                        <input type="range" id="room-target-temp" min="20" max="26" value="22" step="0.5">
+                                        <span id="room-target-temp-value">22°C</span>
+                                    </div>
+                                </div>
+                                <div class="control-item">
+                                    <label>目標湿度</label>
+                                    <div class="control-input">
+                                        <input type="range" id="room-target-humidity" min="40" max="60" value="50" step="5">
+                                        <span id="room-target-humidity-value">50%</span>
+                                    </div>
+                                </div>
+                                <div class="control-item">
+                                    <label>換気レベル</label>
+                                    <div class="control-input">
+                                        <input type="range" id="room-ventilation" min="0" max="100" value="30" step="10">
+                                        <span id="room-ventilation-value">30%</span>
+                                    </div>
+                                </div>
+                                <div class="control-item">
+                                    <button class="control-button" onclick="optimizeRoomEnvironment()">
+                                        環境自動最適化
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                        <div class="optimization-item">
-                            <div class="optimization-icon">💨</div>
-                            <div class="optimization-content">
-                                <h4>換気推奨</h4>
-                                <p>CO2濃度が上昇傾向にあります。15分後に換気を行うことを推奨します。</p>
+                        
+                        <div class="optimization-panel">
+                            <h4>最適化提案</h4>
+                            <div class="optimization-suggestions" id="room-optimization-suggestions">
+                                <div class="optimization-item">
+                                    <div class="optimization-icon">🌡️</div>
+                                    <div class="optimization-content">
+                                        <h5>温度調整</h5>
+                                        <p>現在の温度は適正範囲内です。エネルギー効率を考慮し、設定温度を1°C上げることを推奨します。</p>
+                                    </div>
+                                </div>
+                                <div class="optimization-item">
+                                    <div class="optimization-icon">💨</div>
+                                    <div class="optimization-content">
+                                        <h5>換気推奨</h5>
+                                        <p>CO2濃度が上昇傾向にあります。15分後に換気を行うことを推奨します。</p>
+                                    </div>
+                                </div>
+                                <div class="optimization-item">
+                                    <div class="optimization-icon">💡</div>
+                                    <div class="optimization-content">
+                                        <h5>照明最適化</h5>
+                                        <p>部屋の利用パターンから、自動調光設定の調整を推奨します。</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="optimization-item">
-                            <div class="optimization-icon">💡</div>
-                            <div class="optimization-content">
-                                <h4>照明最適化</h4>
-                                <p>部屋の利用パターンから、自動調光設定の調整を推奨します。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 環境データ分析・可視化 -->
+        <div id="environment-tab" class="tab-content">
+            <div class="dashboard-section">
+                <h2>環境データ分析・可視化システム</h2>
+                
+                <!-- アラート通知パネル -->
+                <div class="alert-panel" id="alert-panel">
+                    <div class="alert-header">
+                        <h3>🚨 環境アラート</h3>
+                        <div class="alert-controls">
+                            <button class="alert-button" onclick="clearAllAlerts()">全てクリア</button>
+                            <button class="alert-button" onclick="muteAlerts()">通知停止</button>
+                        </div>
+                    </div>
+                    <div class="alert-list" id="alert-list">
+                        <!-- 動的に生成されるアラート -->
+                    </div>
+                </div>
+
+                <!-- 環境データ概要 -->
+                <div class="environment-overview">
+                    <h3>📊 環境データ概要</h3>
+                    <div class="overview-grid">
+                        <div class="overview-card temperature-card">
+                            <div class="card-header">
+                                <div class="card-icon">🌡️</div>
+                                <div class="card-title">温度</div>
+                                <div class="status-badge" id="temp-status">正常</div>
+                            </div>
+                            <div class="card-content">
+                                <div class="current-value" id="current-temp">22.5°C</div>
+                                <div class="trend-info">
+                                    <span class="trend-arrow" id="temp-trend">↗</span>
+                                    <span class="trend-text" id="temp-trend-text">上昇傾向</span>
+                                </div>
+                                <div class="range-info">
+                                    <span class="range-label">適正範囲:</span>
+                                    <span class="range-value">20-25°C</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="overview-card humidity-card">
+                            <div class="card-header">
+                                <div class="card-icon">💧</div>
+                                <div class="card-title">湿度</div>
+                                <div class="status-badge" id="humidity-status">正常</div>
+                            </div>
+                            <div class="card-content">
+                                <div class="current-value" id="current-humidity">55%</div>
+                                <div class="trend-info">
+                                    <span class="trend-arrow" id="humidity-trend">→</span>
+                                    <span class="trend-text" id="humidity-trend-text">安定</span>
+                                </div>
+                                <div class="range-info">
+                                    <span class="range-label">適正範囲:</span>
+                                    <span class="range-value">40-60%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="overview-card co2-card">
+                            <div class="card-header">
+                                <div class="card-icon">🌬️</div>
+                                <div class="card-title">CO2濃度</div>
+                                <div class="status-badge" id="co2-status">良好</div>
+                            </div>
+                            <div class="card-content">
+                                <div class="current-value" id="current-co2">450ppm</div>
+                                <div class="trend-info">
+                                    <span class="trend-arrow" id="co2-trend">↗</span>
+                                    <span class="trend-text" id="co2-trend-text">微増</span>
+                                </div>
+                                <div class="range-info">
+                                    <span class="range-label">適正範囲:</span>
+                                    <span class="range-value">< 1000ppm</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="overview-card air-quality-card">
+                            <div class="card-header">
+                                <div class="card-icon">🍃</div>
+                                <div class="card-title">空気質指数</div>
+                                <div class="status-badge" id="aqi-status">良好</div>
+                            </div>
+                            <div class="card-content">
+                                <div class="current-value" id="current-aqi">42</div>
+                                <div class="trend-info">
+                                    <span class="trend-arrow" id="aqi-trend">↘</span>
+                                    <span class="trend-text" id="aqi-trend-text">改善</span>
+                                </div>
+                                <div class="range-info">
+                                    <span class="range-label">評価:</span>
+                                    <span class="range-value">良好 (0-50)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 詳細分析チャート -->
+                <div class="detailed-analysis">
+                    <h3>📈 詳細環境分析</h3>
+                    <div class="analysis-tabs">
+                        <button class="analysis-tab-button active" onclick="showAnalysisTab('realtime')">リアルタイム</button>
+                        <button class="analysis-tab-button" onclick="showAnalysisTab('hourly')">時間別</button>
+                        <button class="analysis-tab-button" onclick="showAnalysisTab('daily')">日別</button>
+                        <button class="analysis-tab-button" onclick="showAnalysisTab('weekly')">週別</button>
+                    </div>
+
+                    <!-- リアルタイム分析 -->
+                    <div id="realtime-analysis" class="analysis-content active">
+                        <div class="charts-grid">
+                            <div class="chart-container">
+                                <h4>リアルタイム環境データ（過去1時間）</h4>
+                                <canvas id="realtime-environment-chart"></canvas>
+                            </div>
+                            <div class="chart-container">
+                                <h4>環境指標レーダーチャート</h4>
+                                <canvas id="environment-radar-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 時間別分析 -->
+                    <div id="hourly-analysis" class="analysis-content">
+                        <div class="charts-grid">
+                            <div class="chart-container">
+                                <h4>24時間環境データトレンド</h4>
+                                <canvas id="hourly-trend-chart"></canvas>
+                            </div>
+                            <div class="chart-container">
+                                <h4>時間帯別環境品質スコア</h4>
+                                <canvas id="hourly-quality-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 日別分析 -->
+                    <div id="daily-analysis" class="analysis-content">
+                        <div class="charts-grid">
+                            <div class="chart-container">
+                                <h4>過去7日間の環境データ</h4>
+                                <canvas id="daily-trend-chart"></canvas>
+                            </div>
+                            <div class="chart-container">
+                                <h4>日別環境品質評価</h4>
+                                <canvas id="daily-quality-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 週別分析 -->
+                    <div id="weekly-analysis" class="analysis-content">
+                        <div class="charts-grid">
+                            <div class="chart-container">
+                                <h4>過去4週間の環境データ</h4>
+                                <canvas id="weekly-trend-chart"></canvas>
+                            </div>
+                            <div class="chart-container">
+                                <h4>週別環境パフォーマンス</h4>
+                                <canvas id="weekly-performance-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 環境予測・推奨 -->
+                <div class="environment-prediction">
+                    <h3>🔮 環境予測・推奨アクション</h3>
+                    <div class="prediction-grid">
+                        <div class="prediction-card">
+                            <div class="prediction-header">
+                                <h4>🌡️ 温度予測</h4>
+                                <div class="prediction-time">次の2時間</div>
+                            </div>
+                            <div class="prediction-content">
+                                <div class="prediction-chart-mini">
+                                    <canvas id="temp-prediction-chart"></canvas>
+                                </div>
+                                <div class="prediction-text">
+                                    <p id="temp-prediction-text">現在の傾向から、2時間後に24.5°Cに達する予測です。</p>
+                                </div>
+                                <div class="recommendation">
+                                    <strong>推奨アクション:</strong>
+                                    <span id="temp-recommendation">空調設定を1°C下げることを推奨</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="prediction-card">
+                            <div class="prediction-header">
+                                <h4>💧 湿度予測</h4>
+                                <div class="prediction-time">次の2時間</div>
+                            </div>
+                            <div class="prediction-content">
+                                <div class="prediction-chart-mini">
+                                    <canvas id="humidity-prediction-chart"></canvas>
+                                </div>
+                                <div class="prediction-text">
+                                    <p id="humidity-prediction-text">湿度は安定した状態を維持する予測です。</p>
+                                </div>
+                                <div class="recommendation">
+                                    <strong>推奨アクション:</strong>
+                                    <span id="humidity-recommendation">現在の設定を維持</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="prediction-card">
+                            <div class="prediction-header">
+                                <h4>🌬️ CO2濃度予測</h4>
+                                <div class="prediction-time">次の2時間</div>
+                            </div>
+                            <div class="prediction-content">
+                                <div class="prediction-chart-mini">
+                                    <canvas id="co2-prediction-chart"></canvas>
+                                </div>
+                                <div class="prediction-text">
+                                    <p id="co2-prediction-text">人の活動により、CO2濃度が上昇する予測です。</p>
+                                </div>
+                                <div class="recommendation">
+                                    <strong>推奨アクション:</strong>
+                                    <span id="co2-recommendation">30分後に換気を実施</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 環境制御パネル -->
+                <div class="environment-control">
+                    <h3>🎛️ 環境制御パネル</h3>
+                    <div class="control-grid">
+                        <div class="control-section">
+                            <h4>空調制御</h4>
+                            <div class="control-items">
+                                <div class="control-item">
+                                    <label>目標温度</label>
+                                    <div class="control-input">
+                                        <input type="range" id="target-temp" min="18" max="28" value="22" step="0.5">
+                                        <span id="target-temp-value">22°C</span>
+                                    </div>
+                                </div>
+                                <div class="control-item">
+                                    <label>目標湿度</label>
+                                    <div class="control-input">
+                                        <input type="range" id="target-humidity" min="30" max="70" value="50" step="5">
+                                        <span id="target-humidity-value">50%</span>
+                                    </div>
+                                </div>
+                                <div class="control-item">
+                                    <label>空調モード</label>
+                                    <select id="hvac-mode">
+                                        <option value="auto">自動</option>
+                                        <option value="cooling">冷房</option>
+                                        <option value="heating">暖房</option>
+                                        <option value="ventilation">換気</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="control-section">
+                            <h4>換気制御</h4>
+                            <div class="control-items">
+                                <div class="control-item">
+                                    <label>換気レベル</label>
+                                    <div class="control-input">
+                                        <input type="range" id="ventilation-level" min="0" max="100" value="30" step="10">
+                                        <span id="ventilation-level-value">30%</span>
+                                    </div>
+                                </div>
+                                <div class="control-item">
+                                    <label>自動換気</label>
+                                    <div class="control-toggle">
+                                        <input type="checkbox" id="auto-ventilation" checked>
+                                        <label for="auto-ventilation" class="toggle-label"></label>
+                                    </div>
+                                </div>
+                                <div class="control-item">
+                                    <button class="control-button" onclick="triggerVentilation()">
+                                        即座に換気実行
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="control-section">
+                            <h4>アラート設定</h4>
+                            <div class="control-items">
+                                <div class="control-item">
+                                    <label>温度アラート閾値</label>
+                                    <div class="threshold-inputs">
+                                        <input type="number" id="temp-min" value="18" step="0.5"> - 
+                                        <input type="number" id="temp-max" value="26" step="0.5"> °C
+                                    </div>
+                                </div>
+                                <div class="control-item">
+                                    <label>湿度アラート閾値</label>
+                                    <div class="threshold-inputs">
+                                        <input type="number" id="humidity-min" value="35" step="5"> - 
+                                        <input type="number" id="humidity-max" value="65" step="5"> %
+                                    </div>
+                                </div>
+                                <div class="control-item">
+                                    <label>CO2アラート閾値</label>
+                                    <div class="threshold-inputs">
+                                        <input type="number" id="co2-max" value="1000" step="50"> ppm
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -253,6 +699,17 @@
                 <button class="demo-button" onclick="clearPersonData()">
                     🗑️ 人物データクリア
                 </button>
+
+                <button class="demo-button" onclick="generateDemoAlert()">
+                    🚨 デモアラート生成
+                </button>
+                <button class="demo-button" onclick="generateIntegratedPersonData()">
+                    👥 統合人物データ生成
+                </button>
+
+                <button class="demo-button" onclick="optimizeRoomEnvironment()">
+                    🏠 部屋環境最適化
+                </button>
             </div>
         </footer>
     </div>
@@ -261,5 +718,10 @@
     <script src="scripts/charts.js"></script>
     <script src="scripts/data-service.js"></script>
     <script src="scripts/person-analysis.js"></script>
+    <script src="scripts/system-status.js"></script>
+    <script src="scripts/environment-analysis.js"></script>
+    <script src="scripts/integrated-person-analysis.js"></script>
+    <script src="scripts/behavior-pattern-analysis.js"></script>
+    <script src="scripts/room-monitor.js"></script>
 </body>
 </html>

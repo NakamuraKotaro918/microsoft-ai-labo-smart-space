@@ -37,16 +37,35 @@ class SmartSpaceDashboard {
         document.querySelectorAll('.tab-button').forEach(button => {
             button.classList.remove('active');
         });
-        event.target.classList.add('active');
+        
+        // クリックされたボタンを見つけてアクティブにする
+        const clickedButton = Array.from(document.querySelectorAll('.tab-button')).find(button => {
+            const onclickAttr = button.getAttribute('onclick');
+            return onclickAttr && onclickAttr.includes(`'${tabName}'`);
+        });
+        if (clickedButton) {
+            clickedButton.classList.add('active');
+        }
 
         // タブコンテンツの表示切り替え
         document.querySelectorAll('.tab-content').forEach(content => {
             content.classList.remove('active');
         });
-        document.getElementById(`${tabName}-tab`).classList.add('active');
+        
+        const targetTab = document.getElementById(`${tabName}-tab`);
+        if (targetTab) {
+            targetTab.classList.add('active');
+        }
 
         this.currentTab = tabName;
         this.updateCurrentTabData();
+        
+        // 環境データ分析タブの場合、チャートを再描画
+        if (tabName === 'environment' && window.environmentAnalysisManager) {
+            setTimeout(() => {
+                window.environmentAnalysisManager.updateCharts();
+            }, 100);
+        }
     }
 
     initializeCharts() {
