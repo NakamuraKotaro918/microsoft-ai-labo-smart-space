@@ -141,12 +141,138 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- システム稼働状況 -->
+                <div class="system-status-section">
+                    <h3>⚙️ システム稼働状況</h3>
+                    <div class="system-status-grid">
+                        <!-- SONY ITRIOS 稼働状況 -->
+                        <div class="system-status-card">
+                            <div class="system-header">
+                                <div class="system-icon">📹</div>
+                                <div class="system-info">
+                                    <h4>SONY ITRIOS</h4>
+                                    <span class="system-model">IMX500搭載AIカメラ</span>
+                                </div>
+                                <div class="status-indicator" id="itrios-status">
+                                    <div class="status-dot online"></div>
+                                    <span class="status-text">稼働中</span>
+                                </div>
+                            </div>
+                            <div class="system-metrics">
+                                <div class="metric-item">
+                                    <span class="metric-label">稼働時間</span>
+                                    <span class="metric-value" id="itrios-uptime">24h 15m</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">処理フレーム数</span>
+                                    <span class="metric-value" id="itrios-frames">1,247,892</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">検出成功率</span>
+                                    <span class="metric-value" id="itrios-success-rate">98.7%</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">CPU使用率</span>
+                                    <span class="metric-value" id="itrios-cpu">45%</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">メモリ使用量</span>
+                                    <span class="metric-value" id="itrios-memory">2.1GB</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">温度</span>
+                                    <span class="metric-value" id="itrios-temp">42°C</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SmartPhone 稼働状況 -->
+                        <div class="system-status-card">
+                            <div class="system-header">
+                                <div class="system-icon">📱</div>
+                                <div class="system-info">
+                                    <h4>SmartPhone + Gemini AI</h4>
+                                    <span class="system-model">Google Pixel 8 Pro</span>
+                                </div>
+                                <div class="status-indicator" id="smartphone-status">
+                                    <div class="status-dot online"></div>
+                                    <span class="status-text">稼働中</span>
+                                </div>
+                            </div>
+                            <div class="system-metrics">
+                                <div class="metric-item">
+                                    <span class="metric-label">稼働時間</span>
+                                    <span class="metric-value" id="smartphone-uptime">18h 42m</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">分析処理数</span>
+                                    <span class="metric-value" id="smartphone-analyses">3,847</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">API成功率</span>
+                                    <span class="metric-value" id="smartphone-api-rate">96.2%</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">バッテリー</span>
+                                    <span class="metric-value" id="smartphone-battery">78%</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">ストレージ</span>
+                                    <span class="metric-value" id="smartphone-storage">45.2GB</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">通信状況</span>
+                                    <span class="metric-value" id="smartphone-network">5G 良好</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- システム連携状況 -->
+                    <div class="integration-status">
+                        <h4>🔗 システム連携状況</h4>
+                        <div class="integration-flow">
+                            <div class="integration-step">
+                                <div class="step-icon">📹</div>
+                                <div class="step-label">ITRIOS<br>人物検出</div>
+                                <div class="step-status active" id="step1-status">✓</div>
+                            </div>
+                            <div class="integration-arrow">→</div>
+                            <div class="integration-step">
+                                <div class="step-icon">📱</div>
+                                <div class="step-label">SmartPhone<br>画像取得</div>
+                                <div class="step-status active" id="step2-status">✓</div>
+                            </div>
+                            <div class="integration-arrow">→</div>
+                            <div class="integration-step">
+                                <div class="step-icon">🤖</div>
+                                <div class="step-label">Gemini AI<br>特徴分析</div>
+                                <div class="step-status active" id="step3-status">✓</div>
+                            </div>
+                            <div class="integration-arrow">→</div>
+                            <div class="integration-step">
+                                <div class="step-icon">📊</div>
+                                <div class="step-label">ダッシュボード<br>表示更新</div>
+                                <div class="step-status active" id="step4-status">✓</div>
+                            </div>
+                        </div>
+                        <div class="integration-metrics">
+                            <div class="integration-metric">
+                                <span class="metric-label">平均処理時間</span>
+                                <span class="metric-value" id="integration-processing-time">2.3秒</span>
+                            </div>
+                            <div class="integration-metric">
+                                <span class="metric-label">データ同期率</span>
+                                <span class="metric-value" id="integration-sync-rate">99.1%</span>
+                            </div>
+                            <div class="integration-metric">
+                                <span class="metric-label">エラー発生率</span>
+                                <span class="metric-value" id="integration-error-rate">0.3%</span>
                             </div>
                         </div>
                     </div>
                 </div>
-
-
             </div>
         </div>
 
@@ -698,6 +824,12 @@
                 </button>
                 <button class="demo-button" onclick="clearPersonData()">
                     🗑️ 人物データクリア
+                </button>
+                <button class="demo-button" onclick="toggleItriosStatus()">
+                    📹 ITRIOS状態切替
+                </button>
+                <button class="demo-button" onclick="toggleSmartphoneStatus()">
+                    📱 SmartPhone状態切替
                 </button>
 
                 <button class="demo-button" onclick="generateDemoAlert()">
