@@ -10,7 +10,6 @@ class DataService {
             entrance: {
                 currentVisitors: 0,
                 dailyVisitors: 0,
-                avgStayTime: 0,
                 ageDistribution: [35, 40, 20, 5],
                 genderDistribution: [55, 40, 5],
                 hourlyData: [],
@@ -132,7 +131,6 @@ class DataService {
         return {
             currentVisitors: Math.max(0, baseVisitors + Math.floor(Math.random() * 5) - 2),
             dailyVisitors: Math.floor(Math.random() * 50) + 150,
-            avgStayTime: Math.floor(Math.random() * 5) + 8,
             ageDistribution: this.generateAgeDistribution(),
             genderDistribution: this.generateGenderDistribution(),
             hourlyData: this.generateHourlyVisitorData(),

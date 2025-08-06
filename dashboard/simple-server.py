@@ -61,7 +61,6 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
         return {
             "currentVisitors": max(0, base_visitors + random.randint(-2, 4)),
             "dailyVisitors": random.randint(150, 250),
-            "avgStayTime": random.randint(8, 15),
             "ageDistribution": [
                 35 + random.randint(-5, 5),
                 40 + random.randint(-5, 5),
@@ -121,7 +120,7 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
             age = random.randint(20, 80)
             gender = random.choice(['male', 'female'])
             
-            # SONY ITRIOS データ
+            # 人物認識カメラ データ
             itrios_persons.append({
                 "id": person_id,
                 "age": age,
@@ -138,7 +137,7 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
                 }
             })
             
-            # Google Gemini データ
+            # AI分析システム データ
             gemini_persons.append({
                 "personId": person_id,
                 "behavior": {
@@ -449,7 +448,7 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
             age = random.randint(20, 80)
             gender = random.choice(['male', 'female'])
             
-            # ITRIOS データ
+            # 人物認識カメラ データ
             itrios_data = {
                 "id": person_id,
                 "age": age,
@@ -467,7 +466,7 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
                 "detectionTime": (datetime.now() - timedelta(minutes=random.randint(1, 10))).isoformat()
             }
             
-            # Gemini 分析データ
+            # AI分析システム 分析データ
             gemini_data = {
                 "personId": person_id,
                 "behavior": {

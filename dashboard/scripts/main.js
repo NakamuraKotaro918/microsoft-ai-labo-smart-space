@@ -384,7 +384,6 @@ class SmartSpaceDashboard {
         // 統計データの更新
         document.getElementById('current-visitors').textContent = Math.floor(Math.random() * 15) + 5;
         document.getElementById('daily-visitors').textContent = Math.floor(Math.random() * 200) + 150;
-        document.getElementById('avg-stay-time').textContent = Math.floor(Math.random() * 10) + 8;
 
         // チャートデータの更新
         if (this.charts.hourlyVisitors) {

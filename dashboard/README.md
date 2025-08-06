@@ -49,12 +49,12 @@ http://localhost:8000
   - 本日の累計来場者数
   - 平均滞在時間
 
-- **SONY ITRIOS 人物認識**
+- **人物認識カメラ 人物認識**
   - 個別人物の年齢・性別検出
   - 認識精度表示
   - リアルタイム人物リスト
 
-- **SmartPhone + Google Gemini 人物特徴分析**
+- **SmartPhone + AI分析システム 人物特徴分析**
   - 行動パターン分析
   - 感情・特徴認識
   - インタラクション分析
@@ -153,8 +153,8 @@ http://localhost:8000
 
 ### センサーデータ
 - **快適君（温湿度CO2センサ）**: MQTT(S)プロトコル
-- **SONY ITRIOS カメラ**: 人物認識API
-- **SmartPhone カメラ**: Google Gemini API
+- **人物認識カメラ**: 人物認識API
+- **SmartPhone カメラ**: AI分析システム API
 
 ### API エンドポイント
 ```

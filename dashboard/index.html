@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Microsoft AI Labo スマート空間最適化ダッシュボード</title>
     <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/auto-display.css">
+    <link rel="stylesheet" href="styles/multi-screen.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3/index.min.js"></script>
 </head>
@@ -12,263 +14,110 @@
     <div class="container">
         <header class="header">
             <h1>Microsoft AI Labo スマート空間最適化システム</h1>
-            <div class="nav-tabs">
-                <button class="tab-button active" onclick="showTab('entrance')">エントランスモニター</button>
-                <button class="tab-button" onclick="showTab('room')">個人開発部屋モニター</button>
-                <button class="tab-button" onclick="showTab('environment')">環境データ分析</button>
+            <div class="screen-indicator">
+                <span id="current-screen-name">エントランス基本情報</span>
+                <div class="auto-switch-indicator">
+                    <span class="indicator-dot"></span>
+                    <span>自動切替中</span>
+                    <span class="countdown-timer" id="countdown-timer">10</span>
+                </div>
+                <div class="screen-progress">
+                    <span id="screen-progress">1/6</span>
+                </div>
             </div>
         </header>
 
-        <!-- エントランスモニター -->
-        <div id="entrance-tab" class="tab-content active">
-            <div class="dashboard-section">
-                <h2>エントランス来場者モニター</h2>
+        <!-- 画面1: エントランス基本情報 -->
+        <div id="entrance-basic-screen" class="screen active">
+            <div class="screen-content">
+                <h2>🚪 エントランス来場者モニター - 基本情報</h2>
                 
                 <!-- リアルタイム統計 -->
-                <div class="stats-grid">
-                    <div class="stat-card">
+                <div class="stats-grid-main">
+                    <div class="stat-card-main">
+                        <div class="stat-icon-main">👥</div>
                         <h3>現在の来場者数</h3>
-                        <div class="stat-value" id="current-visitors">0</div>
-                        <div class="stat-unit">人</div>
+                        <div class="stat-value-main" id="current-visitors">0</div>
+                        <div class="stat-unit-main">人</div>
+                        <div class="stat-trend">前時間比 +2人</div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card-main">
+                        <div class="stat-icon-main">📊</div>
                         <h3>本日の累計来場者数</h3>
-                        <div class="stat-value" id="daily-visitors">0</div>
-                        <div class="stat-unit">人</div>
-                    </div>
-                    <div class="stat-card">
-                        <h3>平均滞在時間</h3>
-                        <div class="stat-value" id="avg-stay-time">0</div>
-                        <div class="stat-unit">分</div>
+                        <div class="stat-value-main" id="daily-visitors">0</div>
+                        <div class="stat-unit-main">人</div>
+                        <div class="stat-trend">昨日比 +15%</div>
                     </div>
                 </div>
 
-                <!-- 来場者属性分析 -->
-                <div class="charts-grid">
-                    <div class="chart-container">
-                        <h3>年齢層分布</h3>
-                        <canvas id="age-distribution-chart"></canvas>
+                <!-- 最終更新情報 -->
+                <div class="update-info-main">
+                    <div class="update-item-main">
+                        <div class="update-icon">⏰</div>
+                        <div class="update-content">
+                            <span class="update-label">最終更新</span>
+                            <span class="update-time" id="last-update">--:--:--</span>
+                        </div>
                     </div>
-                    <div class="chart-container">
-                        <h3>性別分布</h3>
-                        <canvas id="gender-distribution-chart"></canvas>
+                    <div class="update-item-main">
+                        <div class="update-icon">🔄</div>
+                        <div class="update-content">
+                            <span class="update-label">データ取得間隔</span>
+                            <span class="update-interval">10秒</span>
+                        </div>
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <!-- 時間別来場者数 -->
-                <div class="chart-container full-width">
-                    <h3>時間別来場者数（本日）</h3>
-                    <canvas id="hourly-visitors-chart"></canvas>
-                </div>
-
-                <!-- 統合人物分析システム -->
-                <div class="integrated-person-analysis">
-                    <h3>👥 統合人物分析システム</h3>
+        <!-- 画面2: エントランス属性分析 -->
+        <div id="entrance-analysis-screen" class="screen">
+            <div class="screen-content">
+                <h2>🚪 エントランス来場者モニター - 属性分析</h2>
+                
+                <div class="analysis-grid">
+                    <div class="chart-section">
+                        <div class="chart-container-full">
+                            <h3>年齢層分布</h3>
+                            <canvas id="age-distribution-chart"></canvas>
+                            <div class="chart-summary">
+                                <div class="summary-item">
+                                    <span class="age-group">20代以下</span>
+                                    <span class="percentage" id="age-young">35%</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="age-group">30-40代</span>
+                                    <span class="percentage" id="age-middle">40%</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="age-group">50-60代</span>
+                                    <span class="percentage" id="age-senior">20%</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="age-group">70代以上</span>
+                                    <span class="percentage" id="age-elderly">5%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     
-                    <!-- システム状況概要 -->
-                    <div class="analysis-overview">
-                        <div class="overview-stats">
-                            <div class="stat-item">
-                                <div class="stat-icon">🎥</div>
-                                <div class="stat-content">
-                                    <div class="stat-label">ITRIOS検出</div>
-                                    <div class="stat-value" id="itrios-detected-count">0</div>
-                                    <div class="stat-accuracy" id="itrios-accuracy">95%</div>
+                    <div class="chart-section">
+                        <div class="chart-container-full">
+                            <h3>性別分布</h3>
+                            <canvas id="gender-distribution-chart"></canvas>
+                            <div class="chart-summary">
+                                <div class="summary-item">
+                                    <span class="gender-group">男性</span>
+                                    <span class="percentage" id="gender-male">55%</span>
                                 </div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-icon">📱</div>
-                                <div class="stat-content">
-                                    <div class="stat-label">Gemini分析</div>
-                                    <div class="stat-value" id="gemini-analyzed-count">0</div>
-                                    <div class="stat-accuracy" id="gemini-confidence">90%</div>
+                                <div class="summary-item">
+                                    <span class="gender-group">女性</span>
+                                    <span class="percentage" id="gender-female">40%</span>
                                 </div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-icon">🔗</div>
-                                <div class="stat-content">
-                                    <div class="stat-label">データ連携</div>
-                                    <div class="stat-value" id="linked-persons">0</div>
-                                    <div class="stat-accuracy" id="link-accuracy">98%</div>
+                                <div class="summary-item">
+                                    <span class="gender-group">不明</span>
+                                    <span class="percentage" id="gender-unknown">5%</span>
                                 </div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-icon">⏱️</div>
-                                <div class="stat-content">
-                                    <div class="stat-label">処理時間</div>
-                                    <div class="stat-value" id="avg-processing-time">2.3s</div>
-                                    <div class="stat-accuracy" id="last-update-time">--:--</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 人物分析フィルター -->
-                    <div class="analysis-filters">
-                        <div class="filter-group">
-                            <label>表示フィルター:</label>
-                            <button class="filter-btn active" data-filter="all" onclick="filterPersons('all')">全て</button>
-                            <button class="filter-btn" data-filter="active" onclick="filterPersons('active')">アクティブ</button>
-                            <button class="filter-btn" data-filter="interested" onclick="filterPersons('interested')">関心高</button>
-                            <button class="filter-btn" data-filter="group" onclick="filterPersons('group')">グループ</button>
-                        </div>
-                        <div class="filter-group">
-                            <label>並び順:</label>
-                            <select id="sort-persons" onchange="sortPersons(this.value)">
-                                <option value="detection-time">検出時刻順</option>
-                                <option value="interest-level">関心度順</option>
-                                <option value="stay-duration">滞在時間順</option>
-                                <option value="confidence">信頼度順</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- 統合人物データリスト -->
-                    <div class="integrated-person-list" id="integrated-person-list">
-                        <!-- 動的に生成される統合人物データ -->
-                    </div>
-
-                    <!-- 人物分析詳細モーダル -->
-                    <div class="person-detail-modal" id="person-detail-modal">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h4 id="modal-person-title">人物詳細分析</h4>
-                                <button class="modal-close" onclick="closePersonModal()">&times;</button>
-                            </div>
-                            <div class="modal-body" id="modal-person-content">
-                                <!-- 詳細データが動的に挿入される -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- システム稼働状況 -->
-                <div class="system-status-section">
-                    <h3>⚙️ システム稼働状況</h3>
-                    <div class="system-status-grid">
-                        <!-- SONY ITRIOS 稼働状況 -->
-                        <div class="system-status-card">
-                            <div class="system-header">
-                                <div class="system-icon">📹</div>
-                                <div class="system-info">
-                                    <h4>SONY ITRIOS</h4>
-                                    <span class="system-model">IMX500搭載AIカメラ</span>
-                                </div>
-                                <div class="status-indicator" id="itrios-status">
-                                    <div class="status-dot online"></div>
-                                    <span class="status-text">稼働中</span>
-                                </div>
-                            </div>
-                            <div class="system-metrics">
-                                <div class="metric-item">
-                                    <span class="metric-label">稼働時間</span>
-                                    <span class="metric-value" id="itrios-uptime">24h 15m</span>
-                                </div>
-                                <div class="metric-item">
-                                    <span class="metric-label">処理フレーム数</span>
-                                    <span class="metric-value" id="itrios-frames">1,247,892</span>
-                                </div>
-                                <div class="metric-item">
-                                    <span class="metric-label">検出成功率</span>
-                                    <span class="metric-value" id="itrios-success-rate">98.7%</span>
-                                </div>
-                                <div class="metric-item">
-                                    <span class="metric-label">CPU使用率</span>
-                                    <span class="metric-value" id="itrios-cpu">45%</span>
-                                </div>
-                                <div class="metric-item">
-                                    <span class="metric-label">メモリ使用量</span>
-                                    <span class="metric-value" id="itrios-memory">2.1GB</span>
-                                </div>
-                                <div class="metric-item">
-                                    <span class="metric-label">温度</span>
-                                    <span class="metric-value" id="itrios-temp">42°C</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- SmartPhone 稼働状況 -->
-                        <div class="system-status-card">
-                            <div class="system-header">
-                                <div class="system-icon">📱</div>
-                                <div class="system-info">
-                                    <h4>SmartPhone + Gemini AI</h4>
-                                    <span class="system-model">Google Pixel 8 Pro</span>
-                                </div>
-                                <div class="status-indicator" id="smartphone-status">
-                                    <div class="status-dot online"></div>
-                                    <span class="status-text">稼働中</span>
-                                </div>
-                            </div>
-                            <div class="system-metrics">
-                                <div class="metric-item">
-                                    <span class="metric-label">稼働時間</span>
-                                    <span class="metric-value" id="smartphone-uptime">18h 42m</span>
-                                </div>
-                                <div class="metric-item">
-                                    <span class="metric-label">分析処理数</span>
-                                    <span class="metric-value" id="smartphone-analyses">3,847</span>
-                                </div>
-                                <div class="metric-item">
-                                    <span class="metric-label">API成功率</span>
-                                    <span class="metric-value" id="smartphone-api-rate">96.2%</span>
-                                </div>
-                                <div class="metric-item">
-                                    <span class="metric-label">バッテリー</span>
-                                    <span class="metric-value" id="smartphone-battery">78%</span>
-                                </div>
-                                <div class="metric-item">
-                                    <span class="metric-label">ストレージ</span>
-                                    <span class="metric-value" id="smartphone-storage">45.2GB</span>
-                                </div>
-                                <div class="metric-item">
-                                    <span class="metric-label">通信状況</span>
-                                    <span class="metric-value" id="smartphone-network">5G 良好</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- システム連携状況 -->
-                    <div class="integration-status">
-                        <h4>🔗 システム連携状況</h4>
-                        <div class="integration-flow">
-                            <div class="integration-step">
-                                <div class="step-icon">📹</div>
-                                <div class="step-label">ITRIOS<br>人物検出</div>
-                                <div class="step-status active" id="step1-status">✓</div>
-                            </div>
-                            <div class="integration-arrow">→</div>
-                            <div class="integration-step">
-                                <div class="step-icon">📱</div>
-                                <div class="step-label">SmartPhone<br>画像取得</div>
-                                <div class="step-status active" id="step2-status">✓</div>
-                            </div>
-                            <div class="integration-arrow">→</div>
-                            <div class="integration-step">
-                                <div class="step-icon">🤖</div>
-                                <div class="step-label">Gemini AI<br>特徴分析</div>
-                                <div class="step-status active" id="step3-status">✓</div>
-                            </div>
-                            <div class="integration-arrow">→</div>
-                            <div class="integration-step">
-                                <div class="step-icon">📊</div>
-                                <div class="step-label">ダッシュボード<br>表示更新</div>
-                                <div class="step-status active" id="step4-status">✓</div>
-                            </div>
-                        </div>
-                        <div class="integration-metrics">
-                            <div class="integration-metric">
-                                <span class="metric-label">平均処理時間</span>
-                                <span class="metric-value" id="integration-processing-time">2.3秒</span>
-                            </div>
-                            <div class="integration-metric">
-                                <span class="metric-label">データ同期率</span>
-                                <span class="metric-value" id="integration-sync-rate">99.1%</span>
-                            </div>
-                            <div class="integration-metric">
-                                <span class="metric-label">エラー発生率</span>
-                                <span class="metric-value" id="integration-error-rate">0.3%</span>
                             </div>
                         </div>
                     </div>
@@ -276,584 +125,218 @@
             </div>
         </div>
 
-        <!-- 個人開発部屋モニター -->
-        <div id="room-tab" class="tab-content">
-            <div class="dashboard-section">
-                <h2>個人開発部屋環境モニター</h2>
+        <!-- 画面3: エントランス時間別分析 -->
+        <div id="entrance-hourly-screen" class="screen">
+            <div class="screen-content">
+                <h2>🚪 エントランス来場者モニター - 時間別分析</h2>
                 
-                <!-- 部屋情報 -->
-                <div class="room-info-panel">
-                    <div class="room-header">
-                        <div class="room-icon">🏠</div>
-                        <div class="room-details">
-                            <h3>開発ルーム A-101</h3>
-                            <p>個人開発専用スペース</p>
+                <div class="hourly-analysis">
+                    <div class="chart-container-fullscreen">
+                        <h3>時間別来場者数（本日）</h3>
+                        <canvas id="hourly-visitors-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 画面4: エントランス行動パターン分析 -->
+        <div id="entrance-behavior-screen" class="screen">
+            <div class="screen-content">
+                <h2>🚪 エントランス来場者モニター - 行動パターン分析</h2>
+                
+                <div class="behavior-analysis-grid">
+                    <!-- 行動パターン一覧 -->
+                    <div class="behavior-patterns-section">
+                        <h3>📊 行動パターン一覧</h3>
+                        <div class="behavior-patterns-list">
+                            <div class="behavior-pattern-item">
+                                <div class="pattern-info">
+                                    <div class="pattern-icon">🚶</div>
+                                    <div class="pattern-details">
+                                        <div class="pattern-name">通り抜け</div>
+                                        <div class="pattern-description">エントランスを素早く通過</div>
+                                    </div>
+                                </div>
+                                <div class="pattern-percentage" id="pattern-walkthrough">35%</div>
+                            </div>
+                            
+                            <div class="behavior-pattern-item">
+                                <div class="pattern-info">
+                                    <div class="pattern-icon">👀</div>
+                                    <div class="pattern-details">
+                                        <div class="pattern-name">情報確認</div>
+                                        <div class="pattern-description">掲示物や案内を確認</div>
+                                    </div>
+                                </div>
+                                <div class="pattern-percentage" id="pattern-information">25%</div>
+                            </div>
+                            
+                            <div class="behavior-pattern-item">
+                                <div class="pattern-info">
+                                    <div class="pattern-icon">🤝</div>
+                                    <div class="pattern-details">
+                                        <div class="pattern-name">待ち合わせ</div>
+                                        <div class="pattern-description">人との待ち合わせで滞在</div>
+                                    </div>
+                                </div>
+                                <div class="pattern-percentage" id="pattern-meeting">20%</div>
+                            </div>
+                            
+                            <div class="behavior-pattern-item">
+                                <div class="pattern-info">
+                                    <div class="pattern-icon">📱</div>
+                                    <div class="pattern-details">
+                                        <div class="pattern-name">スマホ操作</div>
+                                        <div class="pattern-description">スマートフォンを操作</div>
+                                    </div>
+                                </div>
+                                <div class="pattern-percentage" id="pattern-smartphone">10%</div>
+                            </div>
+                            
+                            <div class="behavior-pattern-item">
+                                <div class="pattern-info">
+                                    <div class="pattern-icon">🗣️</div>
+                                    <div class="pattern-details">
+                                        <div class="pattern-name">会話</div>
+                                        <div class="pattern-description">他の人と会話</div>
+                                    </div>
+                                </div>
+                                <div class="pattern-percentage" id="pattern-conversation">7%</div>
+                            </div>
+                            
+                            <div class="behavior-pattern-item">
+                                <div class="pattern-info">
+                                    <div class="pattern-icon">🤔</div>
+                                    <div class="pattern-details">
+                                        <div class="pattern-name">迷い・探索</div>
+                                        <div class="pattern-description">方向を探している様子</div>
+                                    </div>
+                                </div>
+                                <div class="pattern-percentage" id="pattern-exploring">3%</div>
+                            </div>
                         </div>
-                        <div class="room-status">
-                            <div class="status-indicator" id="room-status-indicator"></div>
-                            <span id="room-status-text">使用中</span>
+                    </div>
+                    
+                    <!-- 行動パターン円グラフ -->
+                    <div class="behavior-chart-section">
+                        <h3>📈 行動パターン分布</h3>
+                        <div class="behavior-chart-container">
+                            <canvas id="behavior-pattern-chart"></canvas>
+                        </div>
+                        
+                        <!-- 行動分析サマリー -->
+                        <div class="behavior-summary">
+                            <div class="behavior-summary-item">
+                                <div class="summary-icon">⏱️</div>
+                                <div class="summary-info">
+                                    <div class="summary-label">平均滞在時間</div>
+                                    <div class="summary-value" id="avg-stay-time">2.3分</div>
+                                </div>
+                            </div>
+                            <div class="behavior-summary-item">
+                                <div class="summary-icon">🎯</div>
+                                <div class="summary-info">
+                                    <div class="summary-label">最多行動パターン</div>
+                                    <div class="summary-value" id="top-behavior">通り抜け</div>
+                                </div>
+                            </div>
+                            <div class="behavior-summary-item">
+                                <div class="summary-icon">📊</div>
+                                <div class="summary-info">
+                                    <div class="summary-label">分析対象者数</div>
+                                    <div class="summary-value" id="analyzed-count">127人</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- 画面5: 個人開発部屋環境データ -->
+        <div id="room-environment-screen" class="screen">
+            <div class="screen-content">
+                <h2>🏠 個人開発部屋モニター - 環境データ</h2>
                 
-                <!-- 環境データ -->
-                <div class="stats-grid">
-                    <div class="stat-card temperature">
-                        <div class="stat-header">
-                            <div class="stat-icon">🌡️</div>
+                <div class="environment-grid-main">
+                    <div class="env-card-main temperature">
+                        <div class="env-header-main">
+                            <div class="env-icon-main">🌡️</div>
                             <h3>温度</h3>
                         </div>
-                        <div class="stat-content">
-                            <div class="stat-value" id="room-temperature">22.5</div>
-                            <div class="stat-unit">°C</div>
-                            <div class="stat-status optimal" id="temperature-status">適正</div>
-                            <div class="stat-trend" id="temperature-trend">→ 安定</div>
+                        <div class="env-content-main">
+                            <div class="env-value-main" id="room-temperature">22.5</div>
+                            <div class="env-unit-main">°C</div>
+                            <div class="env-status optimal" id="temperature-status">適正範囲</div>
+                            <div class="env-range">推奨: 20-26°C</div>
                         </div>
                     </div>
                     
-                    <div class="stat-card humidity">
-                        <div class="stat-header">
-                            <div class="stat-icon">💧</div>
+                    <div class="env-card-main humidity">
+                        <div class="env-header-main">
+                            <div class="env-icon-main">💧</div>
                             <h3>湿度</h3>
                         </div>
-                        <div class="stat-content">
-                            <div class="stat-value" id="room-humidity">55</div>
-                            <div class="stat-unit">%</div>
-                            <div class="stat-status optimal" id="humidity-status">適正</div>
-                            <div class="stat-trend" id="humidity-trend">→ 安定</div>
+                        <div class="env-content-main">
+                            <div class="env-value-main" id="room-humidity">55</div>
+                            <div class="env-unit-main">%</div>
+                            <div class="env-status optimal" id="humidity-status">適正範囲</div>
+                            <div class="env-range">推奨: 40-60%</div>
                         </div>
                     </div>
                     
-                    <div class="stat-card co2">
-                        <div class="stat-header">
-                            <div class="stat-icon">🌬️</div>
+                    <div class="env-card-main co2">
+                        <div class="env-header-main">
+                            <div class="env-icon-main">🌬️</div>
                             <h3>CO2濃度</h3>
                         </div>
-                        <div class="stat-content">
-                            <div class="stat-value" id="room-co2">450</div>
-                            <div class="stat-unit">ppm</div>
-                            <div class="stat-status optimal" id="co2-status">良好</div>
-                            <div class="stat-trend" id="co2-trend">↗ 微増</div>
+                        <div class="env-content-main">
+                            <div class="env-value-main" id="room-co2">450</div>
+                            <div class="env-unit-main">ppm</div>
+                            <div class="env-status optimal" id="co2-status">良好</div>
+                            <div class="env-range">推奨: <600ppm</div>
                         </div>
                     </div>
                     
-                    <div class="stat-card air-quality">
-                        <div class="stat-header">
-                            <div class="stat-icon">🍃</div>
-                            <h3>空気質</h3>
+                    <div class="env-card-main usage">
+                        <div class="env-header-main">
+                            <div class="env-icon-main">💡</div>
+                            <h3>利用状況</h3>
                         </div>
-                        <div class="stat-content">
-                            <div class="stat-value" id="room-air-quality">良好</div>
-                            <div class="stat-unit"></div>
-                            <div class="stat-status optimal" id="air-quality-status">快適</div>
-                            <div class="stat-trend" id="air-quality-trend">→ 安定</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 環境データトレンド -->
-                <div class="charts-section">
-                    <h3>📈 環境データトレンド</h3>
-                    <div class="charts-grid">
-                        <div class="chart-container">
-                            <h4>温度・湿度（過去24時間）</h4>
-                            <canvas id="room-temp-humidity-chart"></canvas>
-                        </div>
-                        <div class="chart-container">
-                            <h4>CO2濃度（過去24時間）</h4>
-                            <canvas id="room-co2-trend-chart"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 利用状況分析 -->
-                <div class="usage-analysis-section">
-                    <h3>📊 部屋利用状況分析</h3>
-                    <div class="usage-stats-grid">
-                        <div class="usage-stat-card">
-                            <div class="usage-stat-header">
-                                <div class="usage-stat-icon">⏰</div>
-                                <h4>今日の利用時間</h4>
-                            </div>
-                            <div class="usage-stat-content">
-                                <div class="usage-stat-value" id="today-usage-hours">6.5</div>
-                                <div class="usage-stat-unit">時間</div>
-                                <div class="usage-stat-detail">開始: 09:30 | 現在継続中</div>
-                            </div>
-                        </div>
-                        
-                        <div class="usage-stat-card">
-                            <div class="usage-stat-header">
-                                <div class="usage-stat-icon">📅</div>
-                                <h4>週間利用率</h4>
-                            </div>
-                            <div class="usage-stat-content">
-                                <div class="usage-stat-value" id="weekly-usage-rate">78</div>
-                                <div class="usage-stat-unit">%</div>
-                                <div class="usage-stat-detail">平均 6.2時間/日</div>
-                            </div>
-                        </div>
-                        
-                        <div class="usage-stat-card">
-                            <div class="usage-stat-header">
-                                <div class="usage-stat-icon">🎯</div>
-                                <h4>生産性指数</h4>
-                            </div>
-                            <div class="usage-stat-content">
-                                <div class="usage-stat-value" id="productivity-index">85</div>
-                                <div class="usage-stat-unit">点</div>
-                                <div class="usage-stat-detail">環境品質ベース</div>
-                            </div>
-                        </div>
-                        
-                        <div class="usage-stat-card">
-                            <div class="usage-stat-header">
-                                <div class="usage-stat-icon">⚡</div>
-                                <h4>エネルギー効率</h4>
-                            </div>
-                            <div class="usage-stat-content">
-                                <div class="usage-stat-value" id="energy-efficiency">92</div>
-                                <div class="usage-stat-unit">%</div>
-                                <div class="usage-stat-detail">前月比 +3%</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- 利用パターンチャート -->
-                    <div class="chart-container full-width">
-                        <h4>週間利用パターン</h4>
-                        <canvas id="room-usage-pattern-chart"></canvas>
-                    </div>
-                </div>
-
-                <!-- 環境制御・最適化 -->
-                <div class="room-control-section">
-                    <h3>🎛️ 環境制御・最適化</h3>
-                    <div class="control-optimization-grid">
-                        <div class="control-panel">
-                            <h4>環境制御</h4>
-                            <div class="control-items">
-                                <div class="control-item">
-                                    <label>目標温度</label>
-                                    <div class="control-input">
-                                        <input type="range" id="room-target-temp" min="20" max="26" value="22" step="0.5">
-                                        <span id="room-target-temp-value">22°C</span>
-                                    </div>
-                                </div>
-                                <div class="control-item">
-                                    <label>目標湿度</label>
-                                    <div class="control-input">
-                                        <input type="range" id="room-target-humidity" min="40" max="60" value="50" step="5">
-                                        <span id="room-target-humidity-value">50%</span>
-                                    </div>
-                                </div>
-                                <div class="control-item">
-                                    <label>換気レベル</label>
-                                    <div class="control-input">
-                                        <input type="range" id="room-ventilation" min="0" max="100" value="30" step="10">
-                                        <span id="room-ventilation-value">30%</span>
-                                    </div>
-                                </div>
-                                <div class="control-item">
-                                    <button class="control-button" onclick="optimizeRoomEnvironment()">
-                                        環境自動最適化
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="optimization-panel">
-                            <h4>最適化提案</h4>
-                            <div class="optimization-suggestions" id="room-optimization-suggestions">
-                                <div class="optimization-item">
-                                    <div class="optimization-icon">🌡️</div>
-                                    <div class="optimization-content">
-                                        <h5>温度調整</h5>
-                                        <p>現在の温度は適正範囲内です。エネルギー効率を考慮し、設定温度を1°C上げることを推奨します。</p>
-                                    </div>
-                                </div>
-                                <div class="optimization-item">
-                                    <div class="optimization-icon">💨</div>
-                                    <div class="optimization-content">
-                                        <h5>換気推奨</h5>
-                                        <p>CO2濃度が上昇傾向にあります。15分後に換気を行うことを推奨します。</p>
-                                    </div>
-                                </div>
-                                <div class="optimization-item">
-                                    <div class="optimization-icon">💡</div>
-                                    <div class="optimization-content">
-                                        <h5>照明最適化</h5>
-                                        <p>部屋の利用パターンから、自動調光設定の調整を推奨します。</p>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="env-content-main">
+                            <div class="env-value-main" id="room-usage-status">利用中</div>
+                            <div class="env-unit-main"></div>
+                            <div class="env-status active" id="usage-status">6.5時間</div>
+                            <div class="env-range">本日の利用時間</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 環境データ分析・可視化 -->
-        <div id="environment-tab" class="tab-content">
-            <div class="dashboard-section">
-                <h2>環境データ分析・可視化システム</h2>
+        <!-- 画面6: 個人開発部屋トレンド分析 -->
+        <div id="room-trend-screen" class="screen">
+            <div class="screen-content">
+                <h2>🏠 個人開発部屋モニター - トレンド分析</h2>
                 
-                <!-- アラート通知パネル -->
-                <div class="alert-panel" id="alert-panel">
-                    <div class="alert-header">
-                        <h3>🚨 環境アラート</h3>
-                        <div class="alert-controls">
-                            <button class="alert-button" onclick="clearAllAlerts()">全てクリア</button>
-                            <button class="alert-button" onclick="muteAlerts()">通知停止</button>
-                        </div>
+                <div class="trend-analysis-grid">
+                    <div class="trend-chart-large">
+                        <h3>温度・湿度トレンド（24時間）</h3>
+                        <canvas id="room-temp-humidity-chart"></canvas>
                     </div>
-                    <div class="alert-list" id="alert-list">
-                        <!-- 動的に生成されるアラート -->
-                    </div>
-                </div>
-
-                <!-- 環境データ概要 -->
-                <div class="environment-overview">
-                    <h3>📊 環境データ概要</h3>
-                    <div class="overview-grid">
-                        <div class="overview-card temperature-card">
-                            <div class="card-header">
-                                <div class="card-icon">🌡️</div>
-                                <div class="card-title">温度</div>
-                                <div class="status-badge" id="temp-status">正常</div>
-                            </div>
-                            <div class="card-content">
-                                <div class="current-value" id="current-temp">22.5°C</div>
-                                <div class="trend-info">
-                                    <span class="trend-arrow" id="temp-trend">↗</span>
-                                    <span class="trend-text" id="temp-trend-text">上昇傾向</span>
-                                </div>
-                                <div class="range-info">
-                                    <span class="range-label">適正範囲:</span>
-                                    <span class="range-value">20-25°C</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="overview-card humidity-card">
-                            <div class="card-header">
-                                <div class="card-icon">💧</div>
-                                <div class="card-title">湿度</div>
-                                <div class="status-badge" id="humidity-status">正常</div>
-                            </div>
-                            <div class="card-content">
-                                <div class="current-value" id="current-humidity">55%</div>
-                                <div class="trend-info">
-                                    <span class="trend-arrow" id="humidity-trend">→</span>
-                                    <span class="trend-text" id="humidity-trend-text">安定</span>
-                                </div>
-                                <div class="range-info">
-                                    <span class="range-label">適正範囲:</span>
-                                    <span class="range-value">40-60%</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="overview-card co2-card">
-                            <div class="card-header">
-                                <div class="card-icon">🌬️</div>
-                                <div class="card-title">CO2濃度</div>
-                                <div class="status-badge" id="co2-status">良好</div>
-                            </div>
-                            <div class="card-content">
-                                <div class="current-value" id="current-co2">450ppm</div>
-                                <div class="trend-info">
-                                    <span class="trend-arrow" id="co2-trend">↗</span>
-                                    <span class="trend-text" id="co2-trend-text">微増</span>
-                                </div>
-                                <div class="range-info">
-                                    <span class="range-label">適正範囲:</span>
-                                    <span class="range-value">< 1000ppm</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="overview-card air-quality-card">
-                            <div class="card-header">
-                                <div class="card-icon">🍃</div>
-                                <div class="card-title">空気質指数</div>
-                                <div class="status-badge" id="aqi-status">良好</div>
-                            </div>
-                            <div class="card-content">
-                                <div class="current-value" id="current-aqi">42</div>
-                                <div class="trend-info">
-                                    <span class="trend-arrow" id="aqi-trend">↘</span>
-                                    <span class="trend-text" id="aqi-trend-text">改善</span>
-                                </div>
-                                <div class="range-info">
-                                    <span class="range-label">評価:</span>
-                                    <span class="range-value">良好 (0-50)</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 詳細分析チャート -->
-                <div class="detailed-analysis">
-                    <h3>📈 詳細環境分析</h3>
-                    <div class="analysis-tabs">
-                        <button class="analysis-tab-button active" onclick="showAnalysisTab('realtime')">リアルタイム</button>
-                        <button class="analysis-tab-button" onclick="showAnalysisTab('hourly')">時間別</button>
-                        <button class="analysis-tab-button" onclick="showAnalysisTab('daily')">日別</button>
-                        <button class="analysis-tab-button" onclick="showAnalysisTab('weekly')">週別</button>
-                    </div>
-
-                    <!-- リアルタイム分析 -->
-                    <div id="realtime-analysis" class="analysis-content active">
-                        <div class="charts-grid">
-                            <div class="chart-container">
-                                <h4>リアルタイム環境データ（過去1時間）</h4>
-                                <canvas id="realtime-environment-chart"></canvas>
-                            </div>
-                            <div class="chart-container">
-                                <h4>環境指標レーダーチャート</h4>
-                                <canvas id="environment-radar-chart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 時間別分析 -->
-                    <div id="hourly-analysis" class="analysis-content">
-                        <div class="charts-grid">
-                            <div class="chart-container">
-                                <h4>24時間環境データトレンド</h4>
-                                <canvas id="hourly-trend-chart"></canvas>
-                            </div>
-                            <div class="chart-container">
-                                <h4>時間帯別環境品質スコア</h4>
-                                <canvas id="hourly-quality-chart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 日別分析 -->
-                    <div id="daily-analysis" class="analysis-content">
-                        <div class="charts-grid">
-                            <div class="chart-container">
-                                <h4>過去7日間の環境データ</h4>
-                                <canvas id="daily-trend-chart"></canvas>
-                            </div>
-                            <div class="chart-container">
-                                <h4>日別環境品質評価</h4>
-                                <canvas id="daily-quality-chart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 週別分析 -->
-                    <div id="weekly-analysis" class="analysis-content">
-                        <div class="charts-grid">
-                            <div class="chart-container">
-                                <h4>過去4週間の環境データ</h4>
-                                <canvas id="weekly-trend-chart"></canvas>
-                            </div>
-                            <div class="chart-container">
-                                <h4>週別環境パフォーマンス</h4>
-                                <canvas id="weekly-performance-chart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 環境予測・推奨 -->
-                <div class="environment-prediction">
-                    <h3>🔮 環境予測・推奨アクション</h3>
-                    <div class="prediction-grid">
-                        <div class="prediction-card">
-                            <div class="prediction-header">
-                                <h4>🌡️ 温度予測</h4>
-                                <div class="prediction-time">次の2時間</div>
-                            </div>
-                            <div class="prediction-content">
-                                <div class="prediction-chart-mini">
-                                    <canvas id="temp-prediction-chart"></canvas>
-                                </div>
-                                <div class="prediction-text">
-                                    <p id="temp-prediction-text">現在の傾向から、2時間後に24.5°Cに達する予測です。</p>
-                                </div>
-                                <div class="recommendation">
-                                    <strong>推奨アクション:</strong>
-                                    <span id="temp-recommendation">空調設定を1°C下げることを推奨</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="prediction-card">
-                            <div class="prediction-header">
-                                <h4>💧 湿度予測</h4>
-                                <div class="prediction-time">次の2時間</div>
-                            </div>
-                            <div class="prediction-content">
-                                <div class="prediction-chart-mini">
-                                    <canvas id="humidity-prediction-chart"></canvas>
-                                </div>
-                                <div class="prediction-text">
-                                    <p id="humidity-prediction-text">湿度は安定した状態を維持する予測です。</p>
-                                </div>
-                                <div class="recommendation">
-                                    <strong>推奨アクション:</strong>
-                                    <span id="humidity-recommendation">現在の設定を維持</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="prediction-card">
-                            <div class="prediction-header">
-                                <h4>🌬️ CO2濃度予測</h4>
-                                <div class="prediction-time">次の2時間</div>
-                            </div>
-                            <div class="prediction-content">
-                                <div class="prediction-chart-mini">
-                                    <canvas id="co2-prediction-chart"></canvas>
-                                </div>
-                                <div class="prediction-text">
-                                    <p id="co2-prediction-text">人の活動により、CO2濃度が上昇する予測です。</p>
-                                </div>
-                                <div class="recommendation">
-                                    <strong>推奨アクション:</strong>
-                                    <span id="co2-recommendation">30分後に換気を実施</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 環境制御パネル -->
-                <div class="environment-control">
-                    <h3>🎛️ 環境制御パネル</h3>
-                    <div class="control-grid">
-                        <div class="control-section">
-                            <h4>空調制御</h4>
-                            <div class="control-items">
-                                <div class="control-item">
-                                    <label>目標温度</label>
-                                    <div class="control-input">
-                                        <input type="range" id="target-temp" min="18" max="28" value="22" step="0.5">
-                                        <span id="target-temp-value">22°C</span>
-                                    </div>
-                                </div>
-                                <div class="control-item">
-                                    <label>目標湿度</label>
-                                    <div class="control-input">
-                                        <input type="range" id="target-humidity" min="30" max="70" value="50" step="5">
-                                        <span id="target-humidity-value">50%</span>
-                                    </div>
-                                </div>
-                                <div class="control-item">
-                                    <label>空調モード</label>
-                                    <select id="hvac-mode">
-                                        <option value="auto">自動</option>
-                                        <option value="cooling">冷房</option>
-                                        <option value="heating">暖房</option>
-                                        <option value="ventilation">換気</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="control-section">
-                            <h4>換気制御</h4>
-                            <div class="control-items">
-                                <div class="control-item">
-                                    <label>換気レベル</label>
-                                    <div class="control-input">
-                                        <input type="range" id="ventilation-level" min="0" max="100" value="30" step="10">
-                                        <span id="ventilation-level-value">30%</span>
-                                    </div>
-                                </div>
-                                <div class="control-item">
-                                    <label>自動換気</label>
-                                    <div class="control-toggle">
-                                        <input type="checkbox" id="auto-ventilation" checked>
-                                        <label for="auto-ventilation" class="toggle-label"></label>
-                                    </div>
-                                </div>
-                                <div class="control-item">
-                                    <button class="control-button" onclick="triggerVentilation()">
-                                        即座に換気実行
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="control-section">
-                            <h4>アラート設定</h4>
-                            <div class="control-items">
-                                <div class="control-item">
-                                    <label>温度アラート閾値</label>
-                                    <div class="threshold-inputs">
-                                        <input type="number" id="temp-min" value="18" step="0.5"> - 
-                                        <input type="number" id="temp-max" value="26" step="0.5"> °C
-                                    </div>
-                                </div>
-                                <div class="control-item">
-                                    <label>湿度アラート閾値</label>
-                                    <div class="threshold-inputs">
-                                        <input type="number" id="humidity-min" value="35" step="5"> - 
-                                        <input type="number" id="humidity-max" value="65" step="5"> %
-                                    </div>
-                                </div>
-                                <div class="control-item">
-                                    <label>CO2アラート閾値</label>
-                                    <div class="threshold-inputs">
-                                        <input type="number" id="co2-max" value="1000" step="50"> ppm
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    
+                    <div class="trend-chart-large">
+                        <h3>CO2濃度トレンド（24時間）</h3>
+                        <canvas id="room-co2-trend-chart"></canvas>
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- データ更新情報 -->
-        <footer class="footer">
-            <div class="update-info">
-                <span>最終更新: <span id="last-update">2025-08-04 08:00:00</span></span>
-                <span class="connection-status" id="connection-status">接続中</span>
             </div>
-            <div class="demo-controls">
-                <button class="demo-button" onclick="generateDemoPersonData()">
-                    🎭 デモ人物データ生成
-                </button>
-                <button class="demo-button" onclick="clearPersonData()">
-                    🗑️ 人物データクリア
-                </button>
-                <button class="demo-button" onclick="toggleItriosStatus()">
-                    📹 ITRIOS状態切替
-                </button>
-                <button class="demo-button" onclick="toggleSmartphoneStatus()">
-                    📱 SmartPhone状態切替
-                </button>
-
-                <button class="demo-button" onclick="generateDemoAlert()">
-                    🚨 デモアラート生成
-                </button>
-                <button class="demo-button" onclick="generateIntegratedPersonData()">
-                    👥 統合人物データ生成
-                </button>
-
-                <button class="demo-button" onclick="optimizeRoomEnvironment()">
-                    🏠 部屋環境最適化
-                </button>
-            </div>
-        </footer>
+        </div>
     </div>
 
-    <script src="scripts/main.js"></script>
-    <script src="scripts/charts.js"></script>
-    <script src="scripts/data-service.js"></script>
-    <script src="scripts/person-analysis.js"></script>
-    <script src="scripts/system-status.js"></script>
-    <script src="scripts/environment-analysis.js"></script>
-    <script src="scripts/integrated-person-analysis.js"></script>
-    <script src="scripts/behavior-pattern-analysis.js"></script>
-    <script src="scripts/room-monitor.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="scripts/auto-display.js"></script>
 </body>
 </html>

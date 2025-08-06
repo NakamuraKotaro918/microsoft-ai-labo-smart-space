@@ -1,8 +1,8 @@
 // 人物分析データ管理クラス
 class PersonAnalysisManager {
     constructor() {
-        this.itriosData = new Map(); // SONY ITRIOS データ
-        this.geminiData = new Map(); // Google Gemini データ
+        this.cameraData = new Map(); // 人物認識カメラ データ
+        this.aiAnalysisData = new Map(); // AI分析システム データ
         this.maxPersonHistory = 20; // 表示する最大人数
         this.dataRetentionTime = 300000; // 5分間データを保持
         
@@ -22,14 +22,14 @@ class PersonAnalysisManager {
             this.updateItriosData(data.itrios);
         }
         if (data.gemini) {
-            this.updateGeminiData(data.gemini);
+            this.updateAiAnalysisData(data.aiAnalysis);
         }
         
         this.updateDisplay();
         this.cleanupOldData();
     }
 
-    // SONY ITRIOS データの更新
+    // 人物認識カメラ データの更新
     updateItriosData(itriosData) {
         const timestamp = new Date();
         
@@ -59,8 +59,8 @@ class PersonAnalysisManager {
         });
     }
 
-    // Google Gemini データの更新
-    updateGeminiData(geminiData) {
+    // AI分析システム データの更新
+    updateAiAnalysisData(aiAnalysisData) {
         const timestamp = new Date();
         
         // 分析された人物データを処理
