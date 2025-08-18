@@ -2424,8 +2424,10 @@ input:checked + .toggle-label:before {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
-    height: calc(100vh - 180px); /* ヘッダーを除いた高さに調整 */
+    height: calc(100vh - 100px); /* ヘッダーを除いた高さに調整 - 余白をさらに削減 */
     overflow: hidden;
+    margin-bottom: 0; /* 下部マージンを削除 */
+    padding-bottom: 0; /* 下部パディングを削除 */
 }
 
 .behavior-patterns-section {
@@ -2630,12 +2632,12 @@ input:checked + .toggle-label:before {
 
 @media (max-width: 768px) {
     .behavior-analysis-grid {
-        height: calc(100vh - 140px);
+        height: calc(100vh - 100px); /* モバイル版でも余白を削減 */
     }
     
     .behavior-patterns-section,
     .behavior-chart-section {
-        padding: 10px;
+        padding: 8px; /* パディングをさらに削減 */
     }
     
     .pattern-info {

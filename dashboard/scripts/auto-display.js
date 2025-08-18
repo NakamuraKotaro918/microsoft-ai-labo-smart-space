@@ -25,6 +25,10 @@ class AutoDisplaySystem {
         this.countdownSeconds = 10; // カウントダウンも10秒
         this.dataService = new DataService();
         this.charts = {};
+        this.autoSwitchTimer = null; // 自動切り替えタイマー
+        this.countdownTimer = null; // カウントダウンタイマー
+        this.isManualControl = false; // 手動制御フラグ
+        this.manualControlTimeout = null; // 手動制御タイムアウト
         
         this.init();
     }
@@ -45,7 +49,10 @@ class AutoDisplaySystem {
         // データ更新開始
         this.startDataUpdate();
         
-        console.log('自動表示システムが開始されました');
+        // マウススクロールイベントリスナーを追加
+        this.setupScrollControl();
+        
+        console.log('自動表示システムが開始されました（マウススクロール対応）');
     }
 
     showScreen(index) {
@@ -83,7 +90,17 @@ class AutoDisplaySystem {
     }
 
     startAutoSwitch() {
-        setInterval(() => {
+        // 既存のタイマーをクリア
+        if (this.autoSwitchTimer) {
+            clearInterval(this.autoSwitchTimer);
+        }
+        
+        this.autoSwitchTimer = setInterval(() => {
+            // 手動制御中は自動切り替えをスキップ
+            if (this.isManualControl) {
+                return;
+            }
+            
             this.currentScreenIndex = (this.currentScreenIndex + 1) % this.screens.length;
             this.showScreen(this.currentScreenIndex);
             // 画面切り替え時にカウントダウンをリセット
@@ -95,8 +112,18 @@ class AutoDisplaySystem {
         // 初期カウントダウン表示
         this.updateCountdownDisplay();
         
+        // 既存のタイマーをクリア
+        if (this.countdownTimer) {
+            clearInterval(this.countdownTimer);
+        }
+        
         // 1秒ごとにカウントダウンを更新
-        setInterval(() => {
+        this.countdownTimer = setInterval(() => {
+            // 手動制御中はカウントダウンを停止
+            if (this.isManualControl) {
+                return;
+            }
+            
             this.countdownSeconds--;
             this.updateCountdownDisplay();
             
@@ -115,15 +142,20 @@ class AutoDisplaySystem {
     updateCountdownDisplay() {
         const countdownElement = document.getElementById('countdown-timer');
         if (countdownElement) {
-            countdownElement.textContent = this.countdownSeconds;
-            
-            // カウントダウンが少なくなったら色を変更（10秒対応）
-            if (this.countdownSeconds <= 3) {
-                countdownElement.style.backgroundColor = '#FF5722';
-            } else if (this.countdownSeconds <= 5) {
-                countdownElement.style.backgroundColor = '#FF9800';
+            if (this.isManualControl) {
+                countdownElement.textContent = '手動';
+                countdownElement.style.backgroundColor = '#9E9E9E';
             } else {
-                countdownElement.style.backgroundColor = '#4CAF50';
+                countdownElement.textContent = this.countdownSeconds;
+                
+                // カウントダウンが少なくなったら色を変更（10秒対応）
+                if (this.countdownSeconds <= 3) {
+                    countdownElement.style.backgroundColor = '#FF5722';
+                } else if (this.countdownSeconds <= 5) {
+                    countdownElement.style.backgroundColor = '#FF9800';
+                } else {
+                    countdownElement.style.backgroundColor = '#4CAF50';
+                }
             }
         }
     }
@@ -710,6 +742,106 @@ class AutoDisplaySystem {
         if (this.charts.co2Trend && data.co2History) {
             this.charts.co2Trend.data.datasets[0].data = data.co2History;
             this.charts.co2Trend.update('none');
+        }
+    }
+
+    // マウススクロール制御のセットアップ
+    setupScrollControl() {
+        let scrollTimeout = null;
+        
+        // マウスホイールイベントリスナー
+        document.addEventListener('wheel', (event) => {
+            event.preventDefault(); // デフォルトのスクロール動作を無効化
+            
+            // スクロール方向を判定
+            const deltaY = event.deltaY;
+            
+            // 連続スクロールを防ぐためのタイムアウト処理
+            if (scrollTimeout) {
+                clearTimeout(scrollTimeout);
+            }
+            
+            scrollTimeout = setTimeout(() => {
+                if (deltaY > 0) {
+                    // 下スクロール：次の画面
+                    this.nextScreen();
+                } else if (deltaY < 0) {
+                    // 上スクロール：前の画面
+                    this.previousScreen();
+                }
+            }, 50); // 50ms のデバウンス
+        }, { passive: false });
+        
+        // キーボードイベントリスナー（矢印キーでも制御可能）
+        document.addEventListener('keydown', (event) => {
+            switch (event.key) {
+                case 'ArrowRight':
+                case 'ArrowDown':
+                    event.preventDefault();
+                    this.nextScreen();
+                    break;
+                case 'ArrowLeft':
+                case 'ArrowUp':
+                    event.preventDefault();
+                    this.previousScreen();
+                    break;
+                case ' ': // スペースキー：自動切り替えの一時停止/再開
+                    event.preventDefault();
+                    this.toggleAutoSwitch();
+                    break;
+            }
+        });
+        
+        console.log('マウススクロール制御が有効になりました');
+    }
+
+    // 次の画面に切り替え
+    nextScreen() {
+        this.enableManualControl();
+        this.currentScreenIndex = (this.currentScreenIndex + 1) % this.screens.length;
+        this.showScreen(this.currentScreenIndex);
+        this.resetCountdown();
+    }
+
+    // 前の画面に切り替え
+    previousScreen() {
+        this.enableManualControl();
+        this.currentScreenIndex = (this.currentScreenIndex - 1 + this.screens.length) % this.screens.length;
+        this.showScreen(this.currentScreenIndex);
+        this.resetCountdown();
+    }
+
+    // 手動制御モードを有効化
+    enableManualControl() {
+        this.isManualControl = true;
+        this.updateCountdownDisplay();
+        
+        // 既存のタイムアウトをクリア
+        if (this.manualControlTimeout) {
+            clearTimeout(this.manualControlTimeout);
+        }
+        
+        // 30秒後に自動制御に戻る
+        this.manualControlTimeout = setTimeout(() => {
+            this.disableManualControl();
+        }, 30000);
+        
+        console.log('手動制御モードが有効になりました（30秒後に自動復帰）');
+    }
+
+    // 手動制御モードを無効化
+    disableManualControl() {
+        this.isManualControl = false;
+        this.resetCountdown();
+        console.log('自動制御モードに復帰しました');
+    }
+
+    // 自動切り替えの一時停止/再開
+    toggleAutoSwitch() {
+        if (this.isManualControl) {
+            this.disableManualControl();
+        } else {
+            this.enableManualControl();
         }
     }
 }
