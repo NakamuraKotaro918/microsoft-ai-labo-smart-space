@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Microsoft AI Labo スマート空間最適化ダッシュボード</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/auto-display.css">
+    <link rel="stylesheet" href="styles/multi-screen.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3/index.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Microsoft AI Labo スマート空間最適化システム</h1>
+            <div class="screen-indicator">
+                <span id="current-screen-name">エントランス基本情報</span>
+                <div class="auto-switch-indicator">
+                    <span class="indicator-dot"></span>
+                    <span>自動切替中</span>
+                    <span class="countdown-timer" id="countdown-timer">10</span>
+                </div>
+                <div class="screen-progress">
+                    <span id="screen-progress">1/6</span>
+                </div>
+                <div class="control-info">
+                    <span>🖱️ スクロール: 画面切替 | ⌨️ 矢印キー: 画面切替 | スペース: 一時停止</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- 画面1: エントランス基本情報 -->
+        <div id="entrance-basic-screen" class="screen active">
+            <div class="screen-content">
+                <h2>🚪 エントランス来場者モニター - 基本情報</h2>
+                
+                <!-- リアルタイム統計 -->
+                <div class="stats-grid-main">
+                    <div class="stat-card-main">
+                        <div class="stat-icon-main">👥</div>
+                        <h3>現在の来場者数</h3>
+                        <div class="stat-value-main" id="current-visitors">0</div>
+                        <div class="stat-unit-main">人</div>
+                        <div class="stat-trend">前時間比 +2人</div>
+                    </div>
+                    <div class="stat-card-main">
+                        <div class="stat-icon-main">📊</div>
+                        <h3>本日の累計来場者数</h3>
+                        <div class="stat-value-main" id="daily-visitors">0</div>
+                        <div class="stat-unit-main">人</div>
+                        <div class="stat-trend">昨日比 +15%</div>
+                    </div>
+                </div>
+
+                <!-- 最終更新情報 -->
+                <div class="update-info-main">
+                    <div class="update-item-main">
+                        <div class="update-icon">⏰</div>
+                        <div class="update-content">
+                            <span class="update-label">最終更新</span>
+                            <span class="update-time" id="last-update">--:--:--</span>
+                        </div>
+                    </div>
+                    <div class="update-item-main">
+                        <div class="update-icon">🔄</div>
+                        <div class="update-content">
+                            <span class="update-label">データ取得間隔</span>
+                            <span class="update-interval">10秒</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 画面2: エントランス属性分析 -->
+        <div id="entrance-analysis-screen" class="screen">
+            <div class="screen-content">
+                <h2>🚪 エントランス来場者モニター - 属性分析</h2>
+                
+                <div class="analysis-grid">
+                    <div class="chart-section">
+                        <div class="chart-container-full">
+                            <h3>年齢層分布</h3>
+                            <canvas id="age-distribution-chart"></canvas>
+                            <div class="chart-summary">
+                                <div class="summary-item">
+                                    <span class="age-group">20代以下</span>
+                                    <span class="percentage" id="age-young">35%</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="age-group">30-40代</span>
+                                    <span class="percentage" id="age-middle">40%</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="age-group">50-60代</span>
+                                    <span class="percentage" id="age-senior">20%</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="age-group">70代以上</span>
+                                    <span class="percentage" id="age-elderly">5%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-section">
+                        <div class="chart-container-full">
+                            <h3>性別分布</h3>
+                            <canvas id="gender-distribution-chart"></canvas>
+                            <div class="chart-summary">
+                                <div class="summary-item">
+                                    <span class="gender-group">男性</span>
+                                    <span class="percentage" id="gender-male">55%</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="gender-group">女性</span>
+                                    <span class="percentage" id="gender-female">40%</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="gender-group">不明</span>
+                                    <span class="percentage" id="gender-unknown">5%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 画面3: エントランス時間別分析 -->
+        <div id="entrance-hourly-screen" class="screen">
+            <div class="screen-content">
+                <h2>🚪 エントランス来場者モニター - 時間別分析</h2>
+                
+                <div class="hourly-analysis">
+                    <div class="chart-container-fullscreen">
+                        <h3>時間別来場者数（本日）</h3>
+                        <canvas id="hourly-visitors-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 画面4: エントランス行動パターン分析 -->
+        <div id="entrance-behavior-screen" class="screen">
+            <div class="screen-content">
+                <h2>🚪 エントランス来場者モニター - 行動パターン分析</h2>
+                
+                <div class="behavior-analysis-grid">
+                    <!-- 行動パターン一覧 -->
+                    <div class="behavior-patterns-section">
+                        <h3>📊 行動パターン一覧</h3>
+                        <div class="behavior-patterns-list">
+                            <div class="behavior-pattern-item">
+                                <div class="pattern-info">
+                                    <div class="pattern-icon">🚶</div>
+                                    <div class="pattern-details">
+                                        <div class="pattern-name">通り抜け</div>
+                                        <div class="pattern-description">エントランスを素早く通過</div>
+                                    </div>
+                                </div>
+                                <div class="pattern-percentage" id="pattern-walkthrough">35%</div>
+                            </div>
+                            
+                            <div class="behavior-pattern-item">
+                                <div class="pattern-info">
+                                    <div class="pattern-icon">👀</div>
+                                    <div class="pattern-details">
+                                        <div class="pattern-name">情報確認</div>
+                                        <div class="pattern-description">掲示物や案内を確認</div>
+                                    </div>
+                                </div>
+                                <div class="pattern-percentage" id="pattern-information">25%</div>
+                            </div>
+                            
+                            <div class="behavior-pattern-item">
+                                <div class="pattern-info">
+                                    <div class="pattern-icon">🤝</div>
+                                    <div class="pattern-details">
+                                        <div class="pattern-name">待ち合わせ</div>
+                                        <div class="pattern-description">人との待ち合わせで滞在</div>
+                                    </div>
+                                </div>
+                                <div class="pattern-percentage" id="pattern-meeting">20%</div>
+                            </div>
+                            
+                            <div class="behavior-pattern-item">
+                                <div class="pattern-info">
+                                    <div class="pattern-icon">📱</div>
+                                    <div class="pattern-details">
+                                        <div class="pattern-name">スマホ操作</div>
+                                        <div class="pattern-description">スマートフォンを操作</div>
+                                    </div>
+                                </div>
+                                <div class="pattern-percentage" id="pattern-smartphone">10%</div>
+                            </div>
+                            
+                            <div class="behavior-pattern-item">
+                                <div class="pattern-info">
+                                    <div class="pattern-icon">🗣️</div>
+                                    <div class="pattern-details">
+                                        <div class="pattern-name">会話</div>
+                                        <div class="pattern-description">他の人と会話</div>
+                                    </div>
+                                </div>
+                                <div class="pattern-percentage" id="pattern-conversation">7%</div>
+                            </div>
+                            
+                            <div class="behavior-pattern-item">
+                                <div class="pattern-info">
+                                    <div class="pattern-icon">🤔</div>
+                                    <div class="pattern-details">
+                                        <div class="pattern-name">迷い・探索</div>
+                                        <div class="pattern-description">方向を探している様子</div>
+                                    </div>
+                                </div>
+                                <div class="pattern-percentage" id="pattern-exploring">3%</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 行動パターン円グラフ -->
+                    <div class="behavior-chart-section">
+                        <h3>📈 行動パターン分布</h3>
+                        <div class="behavior-chart-container">
+                            <canvas id="behavior-pattern-chart"></canvas>
+                        </div>
+                        
+                        <!-- 行動分析サマリー -->
+                        <div class="behavior-summary">
+                            <div class="behavior-summary-item">
+                                <div class="summary-icon">⏱️</div>
+                                <div class="summary-info">
+                                    <div class="summary-label">平均滞在時間</div>
+                                    <div class="summary-value" id="avg-stay-time">2.3分</div>
+                                </div>
+                            </div>
+                            <div class="behavior-summary-item">
+                                <div class="summary-icon">🎯</div>
+                                <div class="summary-info">
+                                    <div class="summary-label">最多行動パターン</div>
+                                    <div class="summary-value" id="top-behavior">通り抜け</div>
+                                </div>
+                            </div>
+                            <div class="behavior-summary-item">
+                                <div class="summary-icon">📊</div>
+                                <div class="summary-info">
+                                    <div class="summary-label">分析対象者数</div>
+                                    <div class="summary-value" id="analyzed-count">127人</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 画面5: 個人開発部屋環境データ -->
+        <div id="room-environment-screen" class="screen">
+            <div class="screen-content">
+                <h2>🏠 個人開発部屋モニター - 環境データ</h2>
+                
+                <div class="environment-grid-main">
+                    <div class="env-card-main temperature">
+                        <div class="env-header-main">
+                            <div class="env-icon-main">🌡️</div>
+                            <h3>温度</h3>
+                        </div>
+                        <div class="env-content-main">
+                            <div class="env-value-main" id="room-temperature">22.5</div>
+                            <div class="env-unit-main">°C</div>
+                            <div class="env-status optimal" id="temperature-status">適正範囲</div>
+                            <div class="env-range">推奨: 20-26°C</div>
+                        </div>
+                    </div>
+                    
+                    <div class="env-card-main humidity">
+                        <div class="env-header-main">
+                            <div class="env-icon-main">💧</div>
+                            <h3>湿度</h3>
+                        </div>
+                        <div class="env-content-main">
+                            <div class="env-value-main" id="room-humidity">55</div>
+                            <div class="env-unit-main">%</div>
+                            <div class="env-status optimal" id="humidity-status">適正範囲</div>
+                            <div class="env-range">推奨: 40-60%</div>
+                        </div>
+                    </div>
+                    
+                    <div class="env-card-main co2">
+                        <div class="env-header-main">
+                            <div class="env-icon-main">🌬️</div>
+                            <h3>CO2濃度</h3>
+                        </div>
+                        <div class="env-content-main">
+                            <div class="env-value-main" id="room-co2">450</div>
+                            <div class="env-unit-main">ppm</div>
+                            <div class="env-status optimal" id="co2-status">良好</div>
+                            <div class="env-range">推奨: <600ppm</div>
+                        </div>
+                    </div>
+                    
+                    <div class="env-card-main usage">
+                        <div class="env-header-main">
+                            <div class="env-icon-main">💡</div>
+                            <h3>利用状況</h3>
+                        </div>
+                        <div class="env-content-main">
+                            <div class="env-value-main" id="room-usage-status">利用中</div>
+                            <div class="env-unit-main"></div>
+                            <div class="env-status active" id="usage-status">6.5時間</div>
+                            <div class="env-range">本日の利用時間</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 画面6: 個人開発部屋トレンド分析 -->
+        <div id="room-trend-screen" class="screen">
+            <div class="screen-content">
+                <h2>🏠 個人開発部屋モニター - トレンド分析</h2>
+                
+                <div class="trend-analysis-grid">
+                    <div class="trend-chart-large">
+                        <h3>温度・湿度トレンド（24時間）</h3>
+                        <canvas id="room-temp-humidity-chart"></canvas>
+                    </div>
+                    
+                    <div class="trend-chart-large">
+                        <h3>CO2濃度トレンド（24時間）</h3>
+                        <canvas id="room-co2-trend-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="scripts/auto-display.js"></script>
+</body>
+</html>
