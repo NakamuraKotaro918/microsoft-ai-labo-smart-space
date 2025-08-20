@@ -70,7 +70,7 @@ jobs:
             --secret-value "auto-generated" \
             --query properties.secretValue \
             --output tsv)
-          echo "::set-output name=deployment_token::$TOKEN"
+          echo "deployment_token=$TOKEN" >> $GITHUB_OUTPUT
           echo "✅ デプロイトークンが生成されました"
       
       - name: Get App URL
@@ -82,7 +82,7 @@ jobs:
             --resource-group ${{ github.event.inputs.resource_group }} \
             --query defaultHostname \
             --output tsv)
-          echo "::set-output name=app_url::https://$URL"
+          echo "app_url=https://$URL" >> $GITHUB_OUTPUT
           echo "✅ アプリURL: https://$URL"
       
       - name: Create Summary
