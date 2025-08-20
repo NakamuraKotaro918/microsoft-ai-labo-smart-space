@@ -1,11 +1,11 @@
 // データサービスクラス - ローカル実行用に簡略化
 class DataService {
     constructor() {
-        this.baseUrl = ''; // 同じオリジンのAPIを使用
+        this.baseUrl = 'https://smart-space-api.azurewebsites.net'; // リアルタイムAPIエンドポイント
         this.updateInterval = 30000; // 30秒間隔
         this.reconnectAttempts = 0;
         this.maxReconnectAttempts = 3;
-        
+
         this.dataCache = {
             entrance: {
                 currentVisitors: 0,
@@ -38,7 +38,7 @@ class DataService {
     startPolling() {
         console.log('データポーリングを開始します');
         this.fetchAllData(); // 初回取得
-        
+
         setInterval(() => {
             this.fetchAllData();
         }, this.updateInterval);
@@ -54,7 +54,7 @@ class DataService {
 
             this.updateDataCache({ entrance: entranceData, room: roomData });
             this.notifyDataUpdate({ entrance: entranceData, room: roomData });
-            
+
             // 人物分析データも生成・通知
             this.generateAndNotifyPersonData();
         } catch (error) {
@@ -67,12 +67,14 @@ class DataService {
     // エントランスデータの取得
     async fetchEntranceData() {
         try {
-            // Azure Static Web AppsではAPIエンドポイントが利用できないため、
-            // 常にモックデータを使用
-            console.log('Using mock entrance data for static hosting');
-            return this.generateMockEntranceData();
+            // リアルタイムAPIからデータ取得
+            const response = await fetch(`${this.baseUrl}/api/entrance/current`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
         } catch (error) {
-            console.warn('Failed to generate entrance data, using fallback');
+            console.warn('Failed to fetch entrance data, using mock data');
             return this.generateMockEntranceData();
         }
     }
@@ -80,12 +82,14 @@ class DataService {
     // 個人開発部屋データの取得
     async fetchRoomData() {
         try {
-            // Azure Static Web AppsではAPIエンドポイントが利用できないため、
-            // 常にモックデータを使用
-            console.log('Using mock room data for static hosting');
-            return this.generateMockRoomData();
+            // リアルタイムAPIからデータ取得
+            const response = await fetch(`${this.baseUrl}/api/room/environment`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
         } catch (error) {
-            console.warn('Failed to generate room data, using fallback');
+            console.warn('Failed to fetch room data, using mock data');
             return this.generateMockRoomData();
         }
     }
@@ -113,10 +117,10 @@ class DataService {
             entrance: this.generateMockEntranceData(),
             room: this.generateMockRoomData()
         };
-        
+
         this.updateDataCache(mockData);
         this.notifyDataUpdate(mockData);
-        
+
         // 人物分析データも生成・通知
         this.generateAndNotifyPersonData();
     }
@@ -125,7 +129,7 @@ class DataService {
     generateMockEntranceData() {
         const currentHour = new Date().getHours();
         const baseVisitors = this.getBaseVisitorsByHour(currentHour);
-        
+
         return {
             currentVisitors: Math.max(0, baseVisitors + Math.floor(Math.random() * 5) - 2),
             dailyVisitors: Math.floor(Math.random() * 50) + 150,
@@ -145,7 +149,7 @@ class DataService {
         const baseTemp = 22.5;
         const baseHumidity = 55;
         const baseCO2 = 450;
-        
+
         return {
             temperature: Math.round((baseTemp + (Math.random() - 0.5) * 4) * 10) / 10,
             humidity: Math.round(baseHumidity + (Math.random() - 0.5) * 20),
@@ -177,7 +181,7 @@ class DataService {
         const male = Math.round(total * maleRatio);
         const female = Math.round(total * (1 - maleRatio) * 0.9); // 不明を考慮
         const unknown = total - male - female;
-        
+
         return [male, female, Math.max(0, unknown)];
     }
 
@@ -185,13 +189,13 @@ class DataService {
     generateHourlyVisitorData() {
         const data = [];
         const now = new Date();
-        
+
         for (let i = 23; i >= 0; i--) {
             const hour = (now.getHours() - i + 24) % 24;
             const baseValue = this.getBaseVisitorsByHour(hour);
             data.push(Math.max(0, baseValue + Math.floor(Math.random() * 5) - 2));
         }
-        
+
         return data;
     }
 
@@ -199,14 +203,14 @@ class DataService {
     generateTemperatureHistory() {
         const baseTemp = 22.5;
         const data = [];
-        
+
         for (let i = 0; i < 24; i++) {
             // 時間帯による温度変動を考慮
             const hourFactor = Math.sin((i - 6) * Math.PI / 12) * 2; // 昼間は高く、夜間は低く
             const randomFactor = (Math.random() - 0.5) * 2;
             data.push(Math.round((baseTemp + hourFactor + randomFactor) * 10) / 10);
         }
-        
+
         return data;
     }
 
@@ -214,14 +218,14 @@ class DataService {
     generateHumidityHistory() {
         const baseHumidity = 55;
         const data = [];
-        
+
         for (let i = 0; i < 24; i++) {
             // 湿度の日内変動
             const hourFactor = Math.cos(i * Math.PI / 12) * 5;
             const randomFactor = (Math.random() - 0.5) * 10;
             data.push(Math.max(30, Math.min(80, Math.round(baseHumidity + hourFactor + randomFactor))));
         }
-        
+
         return data;
     }
 
@@ -229,14 +233,14 @@ class DataService {
     generateCO2History() {
         const baseCO2 = 450;
         const data = [];
-        
+
         for (let i = 0; i < 24; i++) {
             // 使用時間帯でCO2が上昇
             const usageFactor = (i >= 9 && i <= 18) ? Math.random() * 150 : 0;
             const randomFactor = (Math.random() - 0.5) * 50;
             data.push(Math.max(350, Math.round(baseCO2 + usageFactor + randomFactor)));
         }
-        
+
         return data;
     }
 
@@ -283,7 +287,7 @@ class DataService {
         // 30%の確率で人物データを生成（リアルな感じにするため）
         if (Math.random() < 0.3) {
             const personData = this.generateMockPersonData();
-            
+
             // 人物データ更新イベントを発火
             const event = new CustomEvent('personDataUpdate', { detail: personData });
             document.dispatchEvent(event);
@@ -294,18 +298,18 @@ class DataService {
     generateMockPersonData() {
         const currentTime = new Date();
         const personCount = Math.floor(Math.random() * 3) + 1; // 1-3人
-        
+
         const itriosPersons = [];
         const geminiPersons = [];
-        
+
         for (let i = 0; i < personCount; i++) {
             const personId = this.generatePersonId();
-            
+
             // SONY ITRIOS データ
             const age = Math.floor(Math.random() * 60) + 20; // 20-80歳
             const gender = Math.random() > 0.5 ? 'male' : 'female';
             const ageRange = this.getAgeRange(age);
-            
+
             itriosPersons.push({
                 id: personId,
                 age: age,
@@ -321,7 +325,7 @@ class DataService {
                     y: Math.floor(Math.random() * 300) + 100
                 }
             });
-            
+
             // Google Gemini データ
             const behaviors = [
                 '展示物を詳しく観察している',
@@ -332,10 +336,10 @@ class DataService {
                 '特定の展示に長時間滞在',
                 'メモを取りながら見学'
             ];
-            
+
             const emotions = ['興味深い', '楽しそう', '集中している', '驚いている', '満足している'];
             const traits = ['好奇心旺盛', '慎重', '社交的', '分析的', '積極的'];
-            
+
             geminiPersons.push({
                 personId: personId,
                 behavior: {
@@ -360,7 +364,7 @@ class DataService {
                 processingTime: Math.round((Math.random() * 3 + 1) * 10) / 10 // 1.0-4.0秒
             });
         }
-        
+
         return {
             itrios: {
                 detectedPersons: itriosPersons,

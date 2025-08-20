@@ -1,0 +1,419 @@
+# Azure と AWS サービス対応表
+
+## 概要
+Microsoft AI Labo スマート空間最適化ダッシュボードのデプロイメントにおいて、Azureの各サービスとAWSの対応サービスを比較します。
+
+## 1. コンピューティングサービス
+
+### 1.1 Azure App Service vs AWS Elastic Beanstalk
+
+| 項目 | Azure App Service | AWS Elastic Beanstalk |
+|------|------------------|----------------------|
+| **サービス種別** | PaaS（Platform as a Service） | PaaS（Platform as a Service） |
+| **管理レベル** | サーバー管理不要 | サーバー管理不要 |
+| **自動スケーリング** | ✅ 組み込み | ✅ 組み込み |
+| **継続的デプロイ** | ✅ Git、GitHub、Azure DevOps | ✅ Git、GitHub、CodePipeline |
+| **SSL証明書** | ✅ 自動管理 | ✅ 自動管理 |
+| **カスタムドメイン** | ✅ 簡単設定 | ✅ 簡単設定 |
+| **コスト** | ¥1,500〜/月（B1） | $29〜/月（t3.small相当） |
+| **推奨用途** | Webアプリケーション | Webアプリケーション |
+
+**AWSでの実装例:**
+```bash
+# Elastic Beanstalk アプリケーションの作成
+aws elasticbeanstalk create-application --application-name smart-dashboard
+
+# 環境の作成
+aws elasticbeanstalk create-environment \
+  --application-name smart-dashboard \
+  --environment-name smart-dashboard-prod \
+  --solution-stack-name "64bit Amazon Linux 2 v3.5.1 running Python 3.9"
+```
+
+### 1.2 Azure Container Instances vs AWS Fargate
+
+| 項目 | Azure Container Instances | AWS Fargate |
+|------|---------------------------|-------------|
+| **サービス種別** | サーバーレスコンテナ | サーバーレスコンテナ |
+| **管理レベル** | コンテナのみ管理 | コンテナのみ管理 |
+| **スケーリング** | 手動設定 | 自動スケーリング |
+| **料金体系** | 使用時間課金 | 使用時間課金 |
+| **コスト** | ¥0.05/時間（vCPU） | $0.04048/時間（vCPU） |
+| **推奨用途** | マイクロサービス、バッチ処理 | マイクロサービス、バッチ処理 |
+
+**AWSでの実装例:**
+```bash
+# ECS クラスターの作成
+aws ecs create-cluster --cluster-name smart-dashboard-cluster
+
+# タスク定義の作成
+aws ecs register-task-definition \
+  --family smart-dashboard \
+  --network-mode awsvpc \
+  --requires-compatibilities FARGATE \
+  --cpu 256 \
+  --memory 512
+```
+
+### 1.3 Azure Kubernetes Service (AKS) vs AWS EKS
+
+| 項目 | Azure AKS | AWS EKS |
+|------|-----------|---------|
+| **サービス種別** | マネージドKubernetes | マネージドKubernetes |
+| **管理レベル** | マスター管理不要 | マスター管理不要 |
+| **自動スケーリング** | ✅ Cluster Autoscaler | ✅ Cluster Autoscaler |
+| **料金体系** | 管理費無料、ノード課金 | 管理費$0.10/時間、ノード課金 |
+| **コスト** | ¥3,000〜/月/ノード | $73〜/月/ノード |
+| **推奨用途** | 大規模システム、マイクロサービス | 大規模システム、マイクロサービス |
+
+**AWSでの実装例:**
+```bash
+# EKS クラスターの作成
+eksctl create cluster \
+  --name smart-dashboard-cluster \
+  --region us-east-1 \
+  --nodegroup-name standard-workers \
+  --node-type t3.medium \
+  --nodes 3 \
+  --nodes-min 1 \
+  --nodes-max 5
+```
+
+## 2. 静的Webサイトホスティング
+
+### 2.1 Azure Static Web Apps vs AWS Amplify
+
+| 項目 | Azure Static Web Apps | AWS Amplify |
+|------|----------------------|-------------|
+| **サービス種別** | 静的サイト + サーバーレスAPI | 静的サイト + サーバーレスAPI |
+| **認証機能** | ✅ 組み込み | ✅ 組み込み |
+| **継続的デプロイ** | ✅ GitHub連携 | ✅ GitHub連携 |
+| **料金体系** | 無料プランあり | 無料プランあり |
+| **コスト** | ¥1,000〜/月 | $1〜/月 |
+| **推奨用途** | SPA、静的サイト | SPA、静的サイト |
+
+**AWSでの実装例:**
+```bash
+# Amplify アプリケーションの作成
+aws amplify create-app \
+  --name smart-dashboard \
+  --repository https://github.com/username/smart-dashboard
+
+# ブランチの作成
+aws amplify create-branch \
+  --app-id <app-id> \
+  --branch-name main
+```
+
+### 2.2 Azure Blob Storage vs AWS S3
+
+| 項目 | Azure Blob Storage | AWS S3 |
+|------|-------------------|--------|
+| **サービス種別** | オブジェクトストレージ | オブジェクトストレージ |
+| **静的サイトホスティング** | ✅ 対応 | ✅ 対応 |
+| **CDN統合** | ✅ Azure CDN | ✅ CloudFront |
+| **料金体系** | 使用量課金 | 使用量課金 |
+| **コスト** | ¥0.02/GB/月 | $0.023/GB/月 |
+| **推奨用途** | 静的ファイル配信 | 静的ファイル配信 |
+
+**AWSでの実装例:**
+```bash
+# S3 バケットの作成
+aws s3 mb s3://smart-dashboard-static
+
+# 静的サイトホスティングの有効化
+aws s3 website s3://smart-dashboard-static \
+  --index-document index.html \
+  --error-document error.html
+```
+
+## 3. サーバーレスコンピューティング
+
+### 3.1 Azure Functions vs AWS Lambda
+
+| 項目 | Azure Functions | AWS Lambda |
+|------|-----------------|------------|
+| **サービス種別** | サーバーレス関数 | サーバーレス関数 |
+| **実行時間制限** | 最大10分 | 最大15分 |
+| **メモリ制限** | 最大14GB | 最大10GB |
+| **料金体系** | 実行時間課金 | 実行時間課金 |
+| **コスト** | ¥0.0002/GB秒 | $0.0000166667/GB秒 |
+| **推奨用途** | API、バッチ処理 | API、バッチ処理 |
+
+**AWSでの実装例:**
+```python
+# lambda_function.py
+import json
+import random
+from datetime import datetime
+
+def lambda_handler(event, context):
+    """エントランスデータの生成"""
+    return {
+        'statusCode': 200,
+        'headers': {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+        },
+        'body': json.dumps({
+            'currentVisitors': random.randint(10, 50),
+            'dailyVisitors': random.randint(150, 250),
+            'timestamp': datetime.now().isoformat()
+        })
+    }
+```
+
+```bash
+# Lambda関数のデプロイ
+aws lambda create-function \
+  --function-name smart-dashboard-api \
+  --runtime python3.9 \
+  --role arn:aws:iam::<account>:role/lambda-execution-role \
+  --handler lambda_function.lambda_handler \
+  --zip-file fileb://function.zip
+```
+
+## 4. データベースサービス
+
+### 4.1 Azure Database vs AWS RDS
+
+| 項目 | Azure Database | AWS RDS |
+|------|----------------|---------|
+| **サービス種別** | マネージドデータベース | マネージドデータベース |
+| **対応DB** | MySQL、PostgreSQL、SQL Server | MySQL、PostgreSQL、SQL Server |
+| **自動バックアップ** | ✅ 対応 | ✅ 対応 |
+| **高可用性** | ✅ 対応 | ✅ 対応 |
+| **料金体系** | インスタンス課金 | インスタンス課金 |
+| **コスト** | ¥3,000〜/月 | $25〜/月 |
+| **推奨用途** | リレーショナルデータ | リレーショナルデータ |
+
+**AWSでの実装例:**
+```bash
+# RDS インスタンスの作成
+aws rds create-db-instance \
+  --db-instance-identifier smart-dashboard-db \
+  --db-instance-class db.t3.micro \
+  --engine mysql \
+  --master-username admin \
+  --master-user-password <password> \
+  --allocated-storage 20
+```
+
+### 4.2 Azure Cosmos DB vs AWS DynamoDB
+
+| 項目 | Azure Cosmos DB | AWS DynamoDB |
+|------|-----------------|--------------|
+| **サービス種別** | NoSQLデータベース | NoSQLデータベース |
+| **グローバル分散** | ✅ 対応 | ✅ 対応 |
+| **自動スケーリング** | ✅ 対応 | ✅ 対応 |
+| **料金体系** | 使用量課金 | 使用量課金 |
+| **コスト** | ¥25/100RU/月 | $1.25/GB/月 |
+| **推奨用途** | スケーラブルなNoSQLデータ | スケーラブルなNoSQLデータ |
+
+## 5. 監視・ログサービス
+
+### 5.1 Application Insights vs AWS CloudWatch
+
+| 項目 | Application Insights | AWS CloudWatch |
+|------|---------------------|----------------|
+| **サービス種別** | アプリケーション監視 | インフラ・アプリケーション監視 |
+| **APM機能** | ✅ 対応 | ✅ 対応 |
+| **ログ分析** | ✅ 対応 | ✅ 対応 |
+| **アラート** | ✅ 対応 | ✅ 対応 |
+| **料金体系** | 使用量課金 | 使用量課金 |
+| **コスト** | ¥0.15/GB | $0.50/GB |
+| **推奨用途** | アプリケーション監視 | インフラ・アプリケーション監視 |
+
+**AWSでの実装例:**
+```bash
+# CloudWatch ロググループの作成
+aws logs create-log-group --log-group-name /aws/lambda/smart-dashboard-api
+
+# メトリクスフィルターの作成
+aws logs put-metric-filter \
+  --log-group-name /aws/lambda/smart-dashboard-api \
+  --filter-name ErrorFilter \
+  --filter-pattern "ERROR" \
+  --metric-transformations MetricName=ErrorCount,MetricNamespace=SmartDashboard,MetricValue=1
+```
+
+## 6. CDN・ネットワークサービス
+
+### 6.1 Azure CDN vs AWS CloudFront
+
+| 項目 | Azure CDN | AWS CloudFront |
+|------|-----------|----------------|
+| **サービス種別** | コンテンツ配信ネットワーク | コンテンツ配信ネットワーク |
+| **エッジロケーション** | 200+ | 400+ |
+| **SSL証明書** | ✅ 自動管理 | ✅ 自動管理 |
+| **料金体系** | 転送量課金 | 転送量課金 |
+| **コスト** | ¥0.08/GB | $0.085/GB |
+| **推奨用途** | 静的コンテンツ配信 | 静的コンテンツ配信 |
+
+**AWSでの実装例:**
+```bash
+# CloudFront ディストリビューションの作成
+aws cloudfront create-distribution \
+  --distribution-config file://cloudfront-config.json
+```
+
+## 7. セキュリティサービス
+
+### 7.1 Azure Active Directory vs AWS IAM
+
+| 項目 | Azure AD | AWS IAM |
+|------|----------|---------|
+| **サービス種別** | アイデンティティ管理 | アクセス管理 |
+| **シングルサインオン** | ✅ 対応 | ✅ 対応 |
+| **多要素認証** | ✅ 対応 | ✅ 対応 |
+| **料金体系** | ユーザー数課金 | 基本無料 |
+| **コスト** | ¥150〜/ユーザー/月 | 無料 |
+| **推奨用途** | ユーザー認証・認可 | リソースアクセス制御 |
+
+## 8. 統合アーキテクチャ比較
+
+### 8.1 小規模アーキテクチャ
+
+**Azure:**
+```
+Azure App Service (B1)
+├── フロントエンド (HTML/CSS/JS)
+├── バックエンド (Python Flask)
+└── Application Insights
+```
+
+**AWS:**
+```
+AWS Elastic Beanstalk
+├── フロントエンド (HTML/CSS/JS)
+├── バックエンド (Python Flask)
+└── CloudWatch
+```
+
+### 8.2 中規模アーキテクチャ
+
+**Azure:**
+```
+Azure App Service (S1)
+├── フロントエンド
+├── バックエンド API
+├── Application Insights
+├── Azure CDN
+└── Azure Database
+```
+
+**AWS:**
+```
+AWS Elastic Beanstalk
+├── フロントエンド
+├── バックエンド API
+├── CloudWatch
+├── CloudFront
+└── RDS
+```
+
+### 8.3 大規模アーキテクチャ
+
+**Azure:**
+```
+Azure Kubernetes Service (AKS)
+├── フロントエンド (Static Web Apps)
+├── バックエンド API (Container)
+├── Azure Database
+├── Application Insights
+├── Azure CDN
+└── Azure Front Door
+```
+
+**AWS:**
+```
+AWS EKS
+├── フロントエンド (Amplify)
+├── バックエンド API (Container)
+├── RDS
+├── CloudWatch
+├── CloudFront
+└── Application Load Balancer
+```
+
+## 9. コスト比較（月額概算）
+
+| サービス | Azure | AWS | 備考 |
+|---------|-------|-----|------|
+| **Webアプリケーション** | ¥1,500 | $29 | 小規模 |
+| **コンテナ実行** | ¥500-2,000 | $50-200 | 使用量による |
+| **Kubernetes** | ¥10,000-50,000 | $200-1,000 | 3ノード構成 |
+| **静的サイト** | ¥1,000 | $1 | 有料プラン |
+| **サーバーレスAPI** | ¥500-2,000 | $50-200 | 使用量による |
+| **データベース** | ¥3,000 | $25 | 小規模インスタンス |
+| **CDN** | ¥500-1,000 | $50-100 | 中程度のトラフィック |
+| **監視** | ¥1,000-2,000 | $100-200 | 基本監視 |
+
+## 10. 移行戦略
+
+### 10.1 Azure → AWS 移行
+
+1. **フェーズ1: 静的コンテンツ**
+   - Azure Blob Storage → AWS S3
+   - Azure CDN → CloudFront
+
+2. **フェーズ2: アプリケーション**
+   - Azure App Service → AWS Elastic Beanstalk
+   - Azure Functions → AWS Lambda
+
+3. **フェーズ3: データベース**
+   - Azure Database → AWS RDS
+   - Azure Cosmos DB → DynamoDB
+
+4. **フェーズ4: 監視・セキュリティ**
+   - Application Insights → CloudWatch
+   - Azure AD → AWS IAM
+
+### 10.2 AWS → Azure 移行
+
+1. **フェーズ1: 静的コンテンツ**
+   - AWS S3 → Azure Blob Storage
+   - CloudFront → Azure CDN
+
+2. **フェーズ2: アプリケーション**
+   - AWS Elastic Beanstalk → Azure App Service
+   - AWS Lambda → Azure Functions
+
+3. **フェーズ3: データベース**
+   - AWS RDS → Azure Database
+   - DynamoDB → Azure Cosmos DB
+
+4. **フェーズ4: 監視・セキュリティ**
+   - CloudWatch → Application Insights
+   - AWS IAM → Azure AD
+
+## 11. 推奨事項
+
+### 11.1 Azure を選択する場合
+- **理由**: Microsoft エコシステムとの統合
+- **メリット**: 開発者体験、統合性
+- **デメリット**: コストがやや高い
+
+### 11.2 AWS を選択する場合
+- **理由**: 豊富なサービス、成熟したエコシステム
+- **メリット**: サービス数、コスト効率
+- **デメリット**: 学習コスト、複雑性
+
+### 11.3 ハイブリッドアプローチ
+- **静的サイト**: AWS S3 + CloudFront（コスト効率）
+- **アプリケーション**: Azure App Service（開発体験）
+- **データベース**: 既存環境に合わせて選択
+
+## 12. 結論
+
+**推奨アプローチ**:
+1. **既存のMicrosoft環境**: Azure を選択
+2. **コスト重視**: AWS を選択
+3. **技術的柔軟性**: AWS を選択
+4. **開発体験重視**: Azure を選択
+
+**最終的な選択基準**:
+- チームの技術スキル
+- 既存インフラとの統合性
+- 予算制約
+- 長期的な戦略

@@ -1,0 +1,31 @@
+{
+  "bindings": [
+    {
+      "authLevel": "function",
+      "type": "httpTrigger",
+      "direction": "in",
+      "name": "req",
+      "methods": [
+        "post"
+      ],
+      "route": "collect/{source}"
+    },
+    {
+      "type": "eventHub",
+      "name": "outputEventHubMessage",
+      "eventHubName": "sensor-data",
+      "connection": "EventHubConnectionString",
+      "direction": "out"
+    },
+    {
+      "type": "cosmosDB",
+      "name": "outputDocument",
+      "databaseName": "smart-space-db",
+      "collectionName": "sensor-data",
+      "createIfNotExists": true,
+      "connectionStringSetting": "CosmosDBConnectionString",
+      "direction": "out"
+    }
+  ],
+  "disabled": false
+}
