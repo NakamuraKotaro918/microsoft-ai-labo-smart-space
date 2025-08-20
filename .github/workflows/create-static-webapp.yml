@@ -1,0 +1,108 @@
+name: Create Azure Static Web App
+
+on:
+  workflow_dispatch:
+    inputs:
+      resource_group:
+        description: 'リソースグループ名'
+        required: true
+        default: 'smart-space-rg'
+      static_web_app_name:
+        description: 'Static Web App名'
+        required: true
+        default: 'smart-space-dashboard'
+      location:
+        description: 'リージョン'
+        required: true
+        default: 'japaneast'
+      github_repo:
+        description: 'GitHubリポジトリ (owner/repo)'
+        required: true
+        default: 'kyokko-electric/microsoft-ai-labo-smart-space'
+      branch:
+        description: 'ブランチ名'
+        required: true
+        default: 'azure-deployment'
+      app_location:
+        description: 'アプリの場所'
+        required: true
+        default: 'dashboard'
+
+jobs:
+  create_static_webapp:
+    runs-on: ubuntu-latest
+    name: Create Azure Static Web App
+    steps:
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      
+      - name: Create Resource Group
+        run: |
+          echo "📦 リソースグループを作成中..."
+          az group create \
+            --name ${{ github.event.inputs.resource_group }} \
+            --location ${{ github.event.inputs.location }} \
+            --output table
+          echo "✅ リソースグループが作成されました"
+      
+      - name: Create Static Web App
+        run: |
+          echo "🌐 Static Web App を作成中..."
+          az staticwebapp create \
+            --name ${{ github.event.inputs.static_web_app_name }} \
+            --resource-group ${{ github.event.inputs.resource_group }} \
+            --source https://github.com/${{ github.event.inputs.github_repo }} \
+            --branch ${{ github.event.inputs.branch }} \
+            --app-location ${{ github.event.inputs.app_location }} \
+            --output table
+          echo "✅ Static Web App が作成されました"
+      
+      - name: Get Deployment Token
+        id: get-token
+        run: |
+          echo "🔑 デプロイトークンを取得中..."
+          TOKEN=$(az staticwebapp secrets set \
+            --name ${{ github.event.inputs.static_web_app_name }} \
+            --resource-group ${{ github.event.inputs.resource_group }} \
+            --secret-name deployment-token \
+            --secret-value "auto-generated" \
+            --query properties.secretValue \
+            --output tsv)
+          echo "deployment_token=$TOKEN" >> $GITHUB_OUTPUT
+          echo "✅ デプロイトークンが生成されました"
+      
+      - name: Get App URL
+        id: get-url
+        run: |
+          echo "🔗 アプリURLを取得中..."
+          URL=$(az staticwebapp show \
+            --name ${{ github.event.inputs.static_web_app_name }} \
+            --resource-group ${{ github.event.inputs.resource_group }} \
+            --query defaultHostname \
+            --output tsv)
+          echo "app_url=https://$URL" >> $GITHUB_OUTPUT
+          echo "✅ アプリURL: https://$URL"
+      
+      - name: Create Summary
+        run: |
+          echo "## 🎉 Azure Static Web App 作成完了" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📋 作成されたリソース" >> $GITHUB_STEP_SUMMARY
+          echo "- **リソースグループ**: ${{ github.event.inputs.resource_group }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Static Web App**: ${{ github.event.inputs.static_web_app_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **リージョン**: ${{ github.event.inputs.location }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **GitHubリポジトリ**: ${{ github.event.inputs.github_repo }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **ブランチ**: ${{ github.event.inputs.branch }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔗 アクセス情報" >> $GITHUB_STEP_SUMMARY
+          echo "- **アプリURL**: ${{ steps.get-url.outputs.app_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **デプロイトークン**: 生成済み（Azure Portalで確認可能）" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📚 次の手順" >> $GITHUB_STEP_SUMMARY
+          echo "1. Azure Portal で Static Web App リソースに移動" >> $GITHUB_STEP_SUMMARY
+          echo "2. '管理' タブでデプロイトークンを確認" >> $GITHUB_STEP_SUMMARY
+          echo "3. GitHub リポジトリの Settings > Secrets で以下を設定：" >> $GITHUB_STEP_SUMMARY
+          echo "   - `AZURE_STATIC_WEB_APPS_API_TOKEN`: [デプロイトークン]" >> $GITHUB_STEP_SUMMARY
+          echo "4. コードをプッシュして自動デプロイを開始" >> $GITHUB_STEP_SUMMARY
