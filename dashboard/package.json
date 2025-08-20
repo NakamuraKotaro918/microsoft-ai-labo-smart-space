@@ -1,0 +1,27 @@
+{
+  "name": "smart-space-dashboard",
+  "version": "1.0.0",
+  "description": "Microsoft AI Labo スマート空間最適化ダッシュボード",
+  "main": "index.html",
+  "scripts": {
+    "build": "echo 'Static site - no build required'",
+    "start": "echo 'Static site - serve with any web server'",
+    "test": "echo 'No tests specified'"
+  },
+  "keywords": [
+    "dashboard",
+    "iot",
+    "smart-space",
+    "azure",
+    "static-web-apps"
+  ],
+  "author": "Microsoft AI Labo",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/microsoft-ai-labo-smart-space.git"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

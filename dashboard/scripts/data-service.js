@@ -67,13 +67,12 @@ class DataService {
     // エントランスデータの取得
     async fetchEntranceData() {
         try {
-            const response = await fetch(`${this.baseUrl}/entrance/current`);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return await response.json();
+            // Azure Static Web AppsではAPIエンドポイントが利用できないため、
+            // 常にモックデータを使用
+            console.log('Using mock entrance data for static hosting');
+            return this.generateMockEntranceData();
         } catch (error) {
-            console.warn('Failed to fetch entrance data, using mock data');
+            console.warn('Failed to generate entrance data, using fallback');
             return this.generateMockEntranceData();
         }
     }
@@ -81,13 +80,12 @@ class DataService {
     // 個人開発部屋データの取得
     async fetchRoomData() {
         try {
-            const response = await fetch(`${this.baseUrl}/room/environment`);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return await response.json();
+            // Azure Static Web AppsではAPIエンドポイントが利用できないため、
+            // 常にモックデータを使用
+            console.log('Using mock room data for static hosting');
+            return this.generateMockRoomData();
         } catch (error) {
-            console.warn('Failed to fetch room data, using mock data');
+            console.warn('Failed to generate room data, using fallback');
             return this.generateMockRoomData();
         }
     }
