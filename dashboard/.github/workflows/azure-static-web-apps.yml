@@ -4,20 +4,40 @@ on:
   push:
     branches:
       - main
+      - azure-deployment
     paths:
       - 'dashboard/**'
   pull_request:
     types: [opened, synchronize, reopened, closed]
     branches:
       - main
+      - azure-deployment
     paths:
       - 'dashboard/**'
+  workflow_dispatch:
+    inputs:
+      action:
+        description: '実行するアクション'
+        required: true
+        default: 'deploy'
+        type: choice
+        options:
+          - deploy
+          - destroy
+      resource_group:
+        description: 'リソースグループ名'
+        required: false
+        default: 'smart-space-rg'
+      static_web_app_name:
+        description: 'Static Web App名'
+        required: false
+        default: 'smart-space-dashboard'
 
 jobs:
-  build_and_deploy_job:
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+  deploy_job:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed') || (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'deploy')
     runs-on: ubuntu-latest
-    name: Build and Deploy Job
+    name: Deploy to Azure Static Web Apps
     steps:
       - uses: actions/checkout@v3
         with:
@@ -33,6 +53,34 @@ jobs:
           api_location: "" # Api source code path - leave blank if not used
           output_location: "" # Built app content directory - leave blank if not used
           skip_app_build: true # Skip build step for static files
+
+  destroy_job:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy'
+    runs-on: ubuntu-latest
+    name: Destroy Azure Static Web Apps
+    steps:
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      
+      - name: Destroy Static Web App
+        run: |
+          echo "🗑️ Static Web App を削除中..."
+          az staticwebapp delete \
+            --name ${{ github.event.inputs.static_web_app_name }} \
+            --resource-group ${{ github.event.inputs.resource_group }} \
+            --yes
+          echo "✅ Static Web App が削除されました"
+      
+      - name: Destroy Resource Group (Optional)
+        run: |
+          echo "🗑️ リソースグループを削除中..."
+          az group delete \
+            --name ${{ github.event.inputs.resource_group }} \
+            --yes \
+            --no-wait
+          echo "✅ リソースグループの削除が開始されました"
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
