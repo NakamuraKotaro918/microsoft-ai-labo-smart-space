@@ -1,0 +1,36 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "projectName": {
+      "value": "mass-smart-space"
+    },
+    "environment": {
+      "value": "dev"
+    },
+    "location": {
+      "value": "Japan East"
+    },
+    "adminPassword": {
+      "value": "P@ssw0rd123!"
+    },
+    "cosmosAccountName": {
+      "value": "cosmosmasssmartspacedev"
+    },
+    "iotHubName": {
+      "value": "iotmasssmartspacedev"
+    },
+    "appServicePlanSku": {
+      "value": "B1"
+    },
+    "postgresqlServerName": {
+      "value": "psqlmasssmartspacedev"
+    },
+    "postgresqlAdminUsername": {
+      "value": "admin"
+    },
+    "storageAccountName": {
+      "value": "stmasssmartspacedev"
+    }
+  }
+}

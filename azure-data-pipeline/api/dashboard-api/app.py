@@ -1,3 +1,4 @@
+import atexit
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import os
@@ -6,9 +7,18 @@ from datetime import datetime, timedelta
 import azure.cosmos.cosmos_client as cosmos_client
 import azure.cosmos.exceptions as exceptions
 from azure.cosmos.partition_key import PartitionKey
+import threading
+import logging
+
+# MQTTクライアントのインポート
+from mqtt_client import KaitekiMQTTClient
 
 app = Flask(__name__)
 CORS(app)
+
+# ログ設定
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Cosmos DB接続設定
 COSMOS_ENDPOINT = os.environ.get('COSMOS_ENDPOINT')
@@ -22,6 +32,48 @@ cosmos_client_instance = cosmos_client.CosmosClient(COSMOS_ENDPOINT, COSMOS_KEY)
 database = cosmos_client_instance.get_database_client(COSMOS_DATABASE)
 sensor_container = database.get_container_client(COSMOS_CONTAINER_SENSOR)
 analysis_container = database.get_container_client(COSMOS_CONTAINER_ANALYSIS)
+
+# MQTTクライアントの初期化
+mqtt_client = None
+mqtt_thread = None
+
+
+def start_mqtt_client():
+  """MQTTクライアントを別スレッドで開始"""
+  global mqtt_client
+  try:
+    mqtt_client = KaitekiMQTTClient()
+    mqtt_client.start()
+    logger.info("MQTTクライアント開始完了")
+  except Exception as e:
+    logger.error(f"MQTTクライアント開始エラー: {e}")
+
+
+def stop_mqtt_client():
+  """MQTTクライアントを停止"""
+  global mqtt_client
+  if mqtt_client:
+    try:
+      mqtt_client.stop()
+      logger.info("MQTTクライアント停止完了")
+    except Exception as e:
+      logger.error(f"MQTTクライアント停止エラー: {e}")
+
+# アプリケーション起動時にMQTTクライアントを開始
+
+
+@app.before_first_request
+def initialize_mqtt():
+  """アプリケーション初期化時にMQTTクライアントを開始"""
+  global mqtt_thread
+  if os.environ.get('ENABLE_MQTT', 'true').lower() == 'true':
+    mqtt_thread = threading.Thread(target=start_mqtt_client, daemon=True)
+    mqtt_thread.start()
+    logger.info("MQTTクライアントスレッド開始")
+
+
+# アプリケーション終了時のクリーンアップ
+atexit.register(stop_mqtt_client)
 
 
 @app.route('/api/health', methods=['GET'])
@@ -38,7 +90,7 @@ def health_check():
 def get_entrance_data():
   """エントランスデータの取得（AITRIOS + Gemini）"""
   try:
-    # 最新のAITRIOSデータを取得
+  # 最新のAITRIOSデータを取得
     aitrios_query = "SELECT * FROM c WHERE c.deviceType = 'aitrios' ORDER BY c.timestamp DESC OFFSET 0 LIMIT 1"
     aitrios_items = list(sensor_container.query_items(query=aitrios_query, enable_cross_partition_query=True))
 
@@ -115,6 +167,9 @@ def get_room_environment():
             c.data.humidity,
             c.data.co2,
             c.data.occupancy,
+            c.data.illuminance,
+            c.data.pressure,
+            c.data.human,
             c.timestamp
         FROM c 
         WHERE c.deviceType = 'kaiteki' AND c.timestamp >= '{yesterday.isoformat()}'
@@ -132,10 +187,27 @@ def get_room_environment():
         "temperature": current_data.get('data', {}).get('temperature', 22.5),
         "humidity": current_data.get('data', {}).get('humidity', 55),
         "co2": current_data.get('data', {}).get('co2', 450),
+        "pressure": current_data.get('data', {}).get('pressure', 1013),
+        "illuminance": current_data.get('data', {}).get('illuminance', 300),
         "isOccupied": current_data.get('data', {}).get('occupancy', True),
+        "human": current_data.get('data', {}).get('human', False),
+        "deviceInfo": {
+            "deviceNo": current_data.get('data', {}).get('deviceNo'),
+            "deviceName": current_data.get('data', {}).get('deviceName'),
+            "version": current_data.get('data', {}).get('version'),
+            "mac": current_data.get('data', {}).get('mac')
+        },
+        "networkInfo": {
+            "rssi": current_data.get('data', {}).get('rssi', 0),
+            "ssid": current_data.get('data', {}).get('ssid'),
+            "voltage": current_data.get('data', {}).get('voltage', 0),
+            "power": current_data.get('data', {}).get('power', 0)
+        },
         "temperatureHistory": [item.get('data', {}).get('temperature', 22.5) for item in history_items],
         "humidityHistory": [item.get('data', {}).get('humidity', 55) for item in history_items],
         "co2History": [item.get('data', {}).get('co2', 450) for item in history_items],
+        "pressureHistory": [item.get('data', {}).get('pressure', 1013) for item in history_items],
+        "illuminanceHistory": [item.get('data', {}).get('illuminance', 300) for item in history_items],
         "weeklyUsage": weekly_usage,
         "lastUpdate": current_data.get('timestamp', datetime.utcnow().isoformat())
     }

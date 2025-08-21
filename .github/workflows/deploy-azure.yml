@@ -1,0 +1,208 @@
+name: Deploy to Azure
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'infrastructure/**'
+      - 'azure-data-pipeline/**'
+      - '.github/workflows/deploy-azure.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'infrastructure/**'
+      - 'azure-data-pipeline/**'
+      - '.github/workflows/deploy-azure.yml'
+
+env:
+  PROJECT_NAME: mass-smart-space
+  LOCATION: Japan East
+
+jobs:
+  validate:
+    name: Validate Bicep Templates
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Azure CLI
+        uses: azure/setup-azure-cli@v3
+        with:
+          version: '2.76.0'
+
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Validate Bicep - Dev
+        run: |
+          cd infrastructure
+          az deployment group validate \
+            --resource-group "rg-${{ env.PROJECT_NAME }}-dev" \
+            --template-file main.bicep \
+            --parameters parameters.dev.json
+
+      - name: Validate Bicep - Prod
+        if: github.ref == 'refs/heads/main'
+        run: |
+          cd infrastructure
+          az deployment group validate \
+            --resource-group "rg-${{ env.PROJECT_NAME }}-prod" \
+            --template-file main.bicep \
+            --parameters parameters.prod.json
+
+  what-if-dev:
+    name: What-if Analysis - Dev
+    runs-on: ubuntu-latest
+    needs: validate
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Azure CLI
+        uses: azure/setup-azure-cli@v3
+        with:
+          version: '2.76.0'
+
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: What-if Analysis
+        run: |
+          cd infrastructure
+          az deployment group what-if \
+            --resource-group "rg-${{ env.PROJECT_NAME }}-dev" \
+            --template-file main.bicep \
+            --parameters parameters.dev.json \
+            --output table
+
+  deploy-dev:
+    name: Deploy to Dev Environment
+    runs-on: ubuntu-latest
+    needs: validate
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    environment: development
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Azure CLI
+        uses: azure/setup-azure-cli@v3
+        with:
+          version: '2.76.0'
+
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy Infrastructure
+        run: |
+          cd infrastructure
+          ./deploy.sh dev
+
+      - name: Deploy API Application
+        run: |
+          # App Service に API アプリケーションをデプロイ
+          cd azure-data-pipeline/api/dashboard-api
+          
+          # 依存関係のインストール
+          pip install -r requirements.txt
+          
+          # アプリケーションのデプロイ
+          az webapp deployment source config-zip \
+            --resource-group "rg-${{ env.PROJECT_NAME }}-dev" \
+            --name "api-${{ env.PROJECT_NAME }}-dev" \
+            --src app.zip
+
+      - name: Deploy Dashboard
+        run: |
+          # Static Web App にダッシュボードをデプロイ
+          cd dashboard
+          
+          # 静的ファイルのビルド（必要に応じて）
+          # npm run build
+          
+          # Azure Static Web Apps にデプロイ
+          az staticwebapp create \
+            --name "swa-${{ env.PROJECT_NAME }}-dev" \
+            --resource-group "rg-${{ env.PROJECT_NAME }}-dev" \
+            --source . \
+            --location "${{ env.LOCATION }}"
+
+  deploy-prod:
+    name: Deploy to Production Environment
+    runs-on: ubuntu-latest
+    needs: validate
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Azure CLI
+        uses: azure/setup-azure-cli@v3
+        with:
+          version: '2.76.0'
+
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy Infrastructure
+        run: |
+          cd infrastructure
+          ./deploy.sh prod
+
+      - name: Deploy API Application
+        run: |
+          # App Service に API アプリケーションをデプロイ
+          cd azure-data-pipeline/api/dashboard-api
+          
+          # 依存関係のインストール
+          pip install -r requirements.txt
+          
+          # アプリケーションのデプロイ
+          az webapp deployment source config-zip \
+            --resource-group "rg-${{ env.PROJECT_NAME }}-prod" \
+            --name "api-${{ env.PROJECT_NAME }}-prod" \
+            --src app.zip
+
+      - name: Deploy Dashboard
+        run: |
+          # Static Web App にダッシュボードをデプロイ
+          cd dashboard
+          
+          # 静的ファイルのビルド（必要に応じて）
+          # npm run build
+          
+          # Azure Static Web Apps にデプロイ
+          az staticwebapp create \
+            --name "swa-${{ env.PROJECT_NAME }}-prod" \
+            --resource-group "rg-${{ env.PROJECT_NAME }}-prod" \
+            --source . \
+            --location "${{ env.LOCATION }}"
+
+  notify:
+    name: Notify Deployment Status
+    runs-on: ubuntu-latest
+    needs: [deploy-dev, deploy-prod]
+    if: always()
+    steps:
+      - name: Notify Success
+        if: needs.deploy-dev.result == 'success' || needs.deploy-prod.result == 'success'
+        run: |
+          echo "✅ デプロイ成功"
+          # ここにSlackやTeamsへの通知を追加可能
+
+      - name: Notify Failure
+        if: needs.deploy-dev.result == 'failure' || needs.deploy-prod.result == 'failure'
+        run: |
+          echo "❌ デプロイ失敗"
+          # ここにSlackやTeamsへの通知を追加可能

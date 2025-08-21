@@ -3,6 +3,397 @@
 ## 概要
 Microsoft AI Labo スマート空間最適化ダッシュボードのデプロイメントにおいて、Azureの各サービスとAWSの対応サービスを比較します。
 
+## 0. インフラストラクチャ・アズ・コード（IaC）対応
+
+### 0.1 AWS CDK vs Azure Bicep/Terraform
+
+| 項目 | AWS CDK | Azure Bicep | Terraform |
+|------|---------|-------------|-----------|
+| **言語** | TypeScript/JavaScript/Python/Java/C# | Bicep (DSL) | HCL |
+| **コンパイル** | TypeScript → CloudFormation | Bicep → ARM Template | HCL → JSON |
+| **デプロイ** | AWS CloudFormation | Azure Resource Manager | Terraform Cloud/CLI |
+| **モジュール化** | ✅ Constructs | ✅ Modules | ✅ Modules |
+| **状態管理** | CloudFormation | Resource Manager | Terraform State |
+| **推奨用途** | AWS環境 | Azure環境 | マルチクラウド |
+
+### 0.2 Azure Bicep によるデプロイ例
+
+**MASS プロジェクト用のBicepテンプレート:**
+
+```bicep
+// main.bicep
+@description('プロジェクト名')
+param projectName string = 'mass-smart-space'
+
+@description('環境名')
+param environment string = 'dev'
+
+@description('リソースグループ名')
+param resourceGroupName string = 'rg-${projectName}-${environment}'
+
+// App Service Plan
+resource appServicePlan 'Microsoft.Web/serverfarms@2021-02-01' = {
+  name: 'asp-${projectName}-${environment}'
+  location: resourceGroup().location
+  sku: {
+    name: 'B1'
+    tier: 'Basic'
+  }
+}
+
+// App Service (Web App)
+resource webApp 'Microsoft.Web/sites@2021-02-01' = {
+  name: 'app-${projectName}-${environment}'
+  location: resourceGroup().location
+  properties: {
+    serverFarmId: appServicePlan.id
+    siteConfig: {
+      nodeVersion: '18.x'
+      appSettings: [
+        {
+          name: 'WEBSITE_NODE_DEFAULT_VERSION'
+          value: '18.x'
+        }
+        {
+          name: 'NODE_ENV'
+          value: environment
+        }
+      ]
+    }
+  }
+}
+
+// Application Insights
+resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
+  name: 'ai-${projectName}-${environment}'
+  location: resourceGroup().location
+  kind: 'web'
+  properties: {
+    Application_Type: 'web'
+    WorkspaceResourceId: logAnalyticsWorkspace.id
+  }
+}
+
+// Log Analytics Workspace
+resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
+  name: 'law-${projectName}-${environment}'
+  location: resourceGroup().location
+  properties: {
+    sku: {
+      name: 'PerGB2018'
+    }
+    retentionInDays: 30
+  }
+}
+
+// Azure Database for PostgreSQL
+resource postgresqlServer 'Microsoft.DBforPostgreSQL/servers@2017-12-01' = {
+  name: 'psql-${projectName}-${environment}'
+  location: resourceGroup().location
+  properties: {
+    administratorLogin: 'admin'
+    administratorLoginPassword: 'P@ssw0rd123!'
+    version: '11'
+    sslEnforcement: 'Enabled'
+    minimalTlsVersion: 'TLS1_2'
+  }
+  sku: {
+    name: 'B_Gen5_1'
+    tier: 'Basic'
+    capacity: 1
+    family: 'Gen5'
+  }
+}
+
+// Storage Account for Blob Storage
+resource storageAccount 'Microsoft.Storage/storageAccounts@2021-09-01' = {
+  name: 'st${replace(projectName, '-', '')}${environment}'
+  location: resourceGroup().location
+  sku: {
+    name: 'Standard_LRS'
+  }
+  kind: 'StorageV2'
+  properties: {
+    supportsHttpsTrafficOnly: true
+    minimumTlsVersion: 'TLS1_2'
+  }
+}
+
+// CDN Profile
+resource cdnProfile 'Microsoft.Cdn/profiles@2021-06-01' = {
+  name: 'cdn-${projectName}-${environment}'
+  location: 'global'
+  sku: {
+    name: 'Standard_Microsoft'
+  }
+}
+
+// CDN Endpoint
+resource cdnEndpoint 'Microsoft.Cdn/profiles/endpoints@2021-06-01' = {
+  parent: cdnProfile
+  name: 'endpoint-${projectName}-${environment}'
+  location: 'global'
+  properties: {
+    originHostHeader: webApp.properties.defaultHostName
+    origins: [
+      {
+        name: 'webapp-origin'
+        properties: {
+          hostName: webApp.properties.defaultHostName
+          httpPort: 80
+          httpsPort: 443
+        }
+      }
+    ]
+  }
+}
+
+// Outputs
+output webAppUrl string = webApp.properties.defaultHostName
+output appInsightsKey string = appInsights.properties.InstrumentationKey
+output storageAccountName string = storageAccount.name
+output cdnEndpointUrl string = cdnEndpoint.properties.hostName
+```
+
+### 0.3 Terraform によるデプロイ例
+
+**MASS プロジェクト用のTerraform設定:**
+
+```hcl
+# main.tf
+terraform {
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~>3.0"
+    }
+  }
+}
+
+provider "azurerm" {
+  features {}
+}
+
+# リソースグループ
+resource "azurerm_resource_group" "rg" {
+  name     = "rg-mass-smart-space-${var.environment}"
+  location = var.location
+}
+
+# App Service Plan
+resource "azurerm_service_plan" "asp" {
+  name                = "asp-mass-smart-space-${var.environment}"
+  resource_group_name = azurerm_resource_group.rg.name
+  location           = azurerm_resource_group.rg.location
+  os_type            = "Linux"
+  sku_name           = "B1"
+}
+
+# App Service
+resource "azurerm_linux_web_app" "app" {
+  name                = "app-mass-smart-space-${var.environment}"
+  resource_group_name = azurerm_resource_group.rg.name
+  location           = azurerm_resource_group.rg.location
+  service_plan_id    = azurerm_service_plan.asp.id
+
+  site_config {
+    application_stack {
+      node_version = "18-lts"
+    }
+  }
+
+  app_settings = {
+    "NODE_ENV" = var.environment
+  }
+}
+
+# Application Insights
+resource "azurerm_application_insights" "appinsights" {
+  name                = "ai-mass-smart-space-${var.environment}"
+  resource_group_name = azurerm_resource_group.rg.name
+  location           = azurerm_resource_group.rg.location
+  application_type    = "web"
+}
+
+# PostgreSQL Database
+resource "azurerm_postgresql_server" "postgresql" {
+  name                = "psql-mass-smart-space-${var.environment}"
+  location           = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+
+  sku_name = "B_Gen5_1"
+
+  storage_mb                   = 5120
+  backup_retention_days        = 7
+  geo_redundant_backup_enabled = false
+  auto_grow_enabled           = true
+
+  administrator_login          = "admin"
+  administrator_login_password = var.postgresql_password
+  version                     = "11"
+  ssl_enforcement_enabled     = true
+}
+
+# Storage Account
+resource "azurerm_storage_account" "storage" {
+  name                     = "stmasssmartspace${var.environment}"
+  resource_group_name      = azurerm_resource_group.rg.name
+  location                = azurerm_resource_group.rg.location
+  account_tier            = "Standard"
+  account_replication_type = "LRS"
+  account_kind            = "StorageV2"
+}
+
+# CDN Profile
+resource "azurerm_cdn_profile" "cdn" {
+  name                = "cdn-mass-smart-space-${var.environment}"
+  location           = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  sku                 = "Standard_Microsoft"
+}
+
+# CDN Endpoint
+resource "azurerm_cdn_endpoint" "cdn_endpoint" {
+  name                = "endpoint-mass-smart-space-${var.environment}"
+  profile_name        = azurerm_cdn_profile.cdn.name
+  location           = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+
+  origin {
+    name       = "webapp-origin"
+    host_name  = azurerm_linux_web_app.app.default_hostname
+    http_port  = 80
+    https_port = 443
+  }
+}
+```
+
+```hcl
+# variables.tf
+variable "environment" {
+  description = "環境名"
+  type        = string
+  default     = "dev"
+}
+
+variable "location" {
+  description = "Azure リージョン"
+  type        = string
+  default     = "Japan East"
+}
+
+variable "postgresql_password" {
+  description = "PostgreSQL 管理者パスワード"
+  type        = string
+  sensitive   = true
+}
+```
+
+```hcl
+# outputs.tf
+output "web_app_url" {
+  description = "Web App のURL"
+  value       = azurerm_linux_web_app.app.default_hostname
+}
+
+output "app_insights_key" {
+  description = "Application Insights のインストルメンテーションキー"
+  value       = azurerm_application_insights.appinsights.instrumentation_key
+}
+
+output "storage_account_name" {
+  description = "Storage Account 名"
+  value       = azurerm_storage_account.storage.name
+}
+
+output "cdn_endpoint_url" {
+  description = "CDN エンドポイントのURL"
+  value       = azurerm_cdn_endpoint.cdn_endpoint.host_name
+}
+```
+
+### 0.4 デプロイ手順
+
+**Bicep でのデプロイ:**
+```bash
+# リソースグループの作成
+az group create --name rg-mass-smart-space-dev --location japaneast
+
+# Bicep テンプレートのデプロイ
+az deployment group create \
+  --resource-group rg-mass-smart-space-dev \
+  --template-file main.bicep \
+  --parameters projectName=mass-smart-space environment=dev
+```
+
+**Terraform でのデプロイ:**
+```bash
+# Terraform の初期化
+terraform init
+
+# 実行計画の確認
+terraform plan
+
+# インフラのデプロイ
+terraform apply
+```
+
+### 0.5 CI/CD パイプライン統合
+
+**GitHub Actions での自動デプロイ:**
+
+```yaml
+# .github/workflows/deploy.yml
+name: Deploy to Azure
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  AZURE_WEBAPP_NAME: app-mass-smart-space-dev
+  AZURE_RESOURCE_GROUP: rg-mass-smart-space-dev
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Build application
+      run: npm run build
+      
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: ./dist
+        
+    - name: Deploy Infrastructure with Bicep
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+        
+    - name: Deploy Bicep Template
+      run: |
+        az deployment group create \
+          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+          --template-file infrastructure/main.bicep \
+          --parameters environment=dev
+```
+
 ## 1. コンピューティングサービス
 
 ### 1.1 Azure App Service vs AWS Elastic Beanstalk
