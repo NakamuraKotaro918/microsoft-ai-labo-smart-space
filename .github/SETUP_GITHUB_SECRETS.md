@@ -130,6 +130,35 @@ az group delete --name test-rg --yes
    az role assignment list --assignee $AZURE_CLIENT_ID
    ```
 
+### GitHub Actions のトラブルシューティング
+
+#### Azure CLI インストールエラー
+```
+E: Could not open lock file /var/lib/apt/lists/lock - open (13: Permission denied)
+```
+
+**解決策**: 
+- GitHub Actionsワークフローで `azure/setup-azure-cli@v1` アクションを使用
+- または `sudo` を使用してインストール: `curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash`
+
+#### 認証エラー
+```
+Error: AADSTS700016: Application with identifier 'xxx' was not found
+```
+
+**解決策**:
+- サービスプリンシパルが正しく作成されているか確認
+- GitHub Secretsの値が正しく設定されているか確認
+
+#### 権限不足エラー
+```
+Error: Authorization failed
+```
+
+**解決策**:
+- サービスプリンシパルに適切なロールが付与されているか確認
+- サブスクリプションレベルでの権限を確認
+
 ## 🔒 セキュリティのベストプラクティス
 
 1. **最小権限の原則**
