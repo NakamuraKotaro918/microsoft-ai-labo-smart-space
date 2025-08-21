@@ -278,7 +278,6 @@ resource postgresqlDatabase 'Microsoft.DBforPostgreSQL/servers/databases@2017-12
   properties: {
     charset: 'utf8'
     collation: 'utf8_general_ci'
-    createMode: 'Default'
   }
 }
 
