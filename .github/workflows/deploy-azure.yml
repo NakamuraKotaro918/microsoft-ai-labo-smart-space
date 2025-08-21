@@ -25,6 +25,15 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Clear cache and setup environment
+        run: |
+          # キャッシュをクリア
+          sudo rm -rf /var/lib/apt/lists/*
+          sudo apt-get clean
+          sudo apt-get update
 
       - name: Setup Azure CLI
         run: |
@@ -37,6 +46,13 @@ jobs:
             --username ${{ secrets.AZURE_CLIENT_ID }} \
             --password ${{ secrets.AZURE_CLIENT_SECRET }} \
             --tenant ${{ secrets.AZURE_TENANT_ID }}
+
+      - name: Debug - Show Bicep file content
+        run: |
+          cd infrastructure
+          echo "=== Bicep file content around line 258 ==="
+          sed -n '250,270p' main.bicep
+          echo "=== End of content ==="
 
       - name: Validate Bicep - Dev
         run: |
@@ -63,6 +79,15 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Clear cache and setup environment
+        run: |
+          # キャッシュをクリア
+          sudo rm -rf /var/lib/apt/lists/*
+          sudo apt-get clean
+          sudo apt-get update
 
       - name: Setup Azure CLI
         run: |
@@ -94,6 +119,15 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Clear cache and setup environment
+        run: |
+          # キャッシュをクリア
+          sudo rm -rf /var/lib/apt/lists/*
+          sudo apt-get clean
+          sudo apt-get update
 
       - name: Setup Azure CLI
         run: |
@@ -150,6 +184,15 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Clear cache and setup environment
+        run: |
+          # キャッシュをクリア
+          sudo rm -rf /var/lib/apt/lists/*
+          sudo apt-get clean
+          sudo apt-get update
 
       - name: Setup Azure CLI
         run: |
