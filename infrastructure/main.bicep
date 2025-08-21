@@ -10,9 +10,6 @@ param environment string = 'dev'
 @description('Azure リージョン')
 param location string = 'Japan East'
 
-@description('リソースグループ名')
-param resourceGroupName string = 'rg-${projectName}-${environment}'
-
 @description('管理者パスワード')
 @secure()
 param adminPassword string
@@ -43,18 +40,10 @@ var tags = {
   version: '1.0.0'
 }
 
-// リソースグループ
-resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
-  name: resourceGroupName
-  location: location
-  tags: tags
-}
-
 // Cosmos DB アカウント
 resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2021-10-15' = {
   name: cosmosAccountName
   location: location
-  resourceGroup: rg.name
   properties: {
     databaseAccountOfferType: 'Standard'
     locations: [
@@ -150,7 +139,6 @@ resource analysisDataContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabas
 resource iotHub 'Microsoft.Devices/IotHubs@2021-07-02' = {
   name: iotHubName
   location: location
-  resourceGroup: rg.name
   sku: {
     name: 'S1'
     capacity: 1
@@ -190,7 +178,6 @@ resource iotDevice 'Microsoft.Devices/IotHubs/devices@2021-07-02' = {
 resource appServicePlan 'Microsoft.Web/serverfarms@2021-02-01' = {
   name: 'asp-${projectName}-${environment}'
   location: location
-  resourceGroup: rg.name
   sku: {
     name: appServicePlanSku
     tier: 'Basic'
@@ -206,7 +193,6 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2021-02-01' = {
 resource dashboardApi 'Microsoft.Web/sites@2021-02-01' = {
   name: 'api-${projectName}-${environment}'
   location: location
-  resourceGroup: rg.name
   properties: {
     serverFarmId: appServicePlan.id
     siteConfig: {
@@ -262,7 +248,6 @@ resource dashboardApi 'Microsoft.Web/sites@2021-02-01' = {
 resource postgresqlServer 'Microsoft.DBforPostgreSQL/servers@2017-12-01' = {
   name: postgresqlServerName
   location: location
-  resourceGroup: rg.name
   sku: {
     name: 'B_Gen5_1'
     tier: 'Basic'
@@ -299,7 +284,6 @@ resource postgresqlDatabase 'Microsoft.DBforPostgreSQL/servers/databases@2017-12
 resource storageAccount 'Microsoft.Storage/storageAccounts@2021-09-01' = {
   name: storageAccountName
   location: location
-  resourceGroup: rg.name
   sku: {
     name: 'Standard_LRS'
   }
@@ -312,20 +296,12 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2021-09-01' = {
   tags: tags
 }
 
-// Storage Account - Blob Container
-resource blobContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2021-09-01' = {
-  parent: storageAccount
-  name: 'default/static-files'
-  properties: {
-    publicAccess: 'None'
-  }
-}
+
 
 // Application Insights
 resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   name: 'ai-${projectName}-${environment}'
   location: location
-  resourceGroup: rg.name
   kind: 'web'
   properties: {
     Application_Type: 'web'
@@ -338,7 +314,6 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
 resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
   name: 'law-${projectName}-${environment}'
   location: location
-  resourceGroup: rg.name
   properties: {
     sku: {
       name: 'PerGB2018'
@@ -352,7 +327,6 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10
 resource cdnProfile 'Microsoft.Cdn/profiles@2021-06-01' = {
   name: 'cdn-${projectName}-${environment}'
   location: 'global'
-  resourceGroup: rg.name
   sku: {
     name: 'Standard_Microsoft'
   }
@@ -383,7 +357,6 @@ resource cdnEndpoint 'Microsoft.Cdn/profiles/endpoints@2021-06-01' = {
 resource keyVault 'Microsoft.KeyVault/vaults@2021-06-01-preview' = {
   name: 'kv-${replace(projectName, '-', '')}${environment}'
   location: location
-  resourceGroup: rg.name
   properties: {
     sku: {
       family: 'A'
@@ -400,7 +373,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2021-06-01-preview' = {
 }
 
 // Outputs
-output resourceGroupName string = rg.name
+output resourceGroupName string = 'rg-${projectName}-${environment}'
 output cosmosAccountName string = cosmosAccount.name
 output cosmosEndpoint string = cosmosAccount.properties.documentEndpoint
 output iotHubName string = iotHub.name
