@@ -17,6 +17,7 @@ on:
 env:
   PROJECT_NAME: mass-smart-space
   LOCATION: Japan East
+  TIMESTAMP: ${{ github.run_id }}-${{ github.run_number }}
 
 jobs:
   validate:
@@ -50,9 +51,17 @@ jobs:
       - name: Debug - Show Bicep file content
         run: |
           cd infrastructure
+          echo "=== Current timestamp: $(date) ==="
+          echo "=== Git commit: $(git rev-parse HEAD) ==="
           echo "=== Bicep file content around line 258 ==="
           sed -n '250,270p' main.bicep
           echo "=== End of content ==="
+          echo "=== Checking for createMode ==="
+          grep -n "createMode" main.bicep || echo "createMode not found"
+          echo "=== End of check ==="
+          echo "=== Full Bicep file content ==="
+          cat main.bicep
+          echo "=== End of full content ==="
 
       - name: Validate Bicep - Dev
         run: |
