@@ -31,10 +31,20 @@ jobs:
 
       - name: Clear cache and setup environment
         run: |
-          # キャッシュをクリア
+          # システムキャッシュをクリア
           sudo rm -rf /var/lib/apt/lists/*
           sudo apt-get clean
           sudo apt-get update
+          
+          # GitHub Actions キャッシュをクリア
+          echo "Clearing GitHub Actions cache..."
+          sudo rm -rf $GITHUB_WORKSPACE/.git/objects
+          sudo rm -rf /tmp/*
+          
+          # 環境変数でキャッシュを無効化
+          echo "Cache invalidation timestamp: ${{ env.TIMESTAMP }}"
+          echo "GitHub run ID: ${{ github.run_id }}"
+          echo "GitHub run number: ${{ github.run_number }}"
 
       - name: Setup Azure CLI
         run: |
@@ -93,10 +103,20 @@ jobs:
 
       - name: Clear cache and setup environment
         run: |
-          # キャッシュをクリア
+          # システムキャッシュをクリア
           sudo rm -rf /var/lib/apt/lists/*
           sudo apt-get clean
           sudo apt-get update
+          
+          # GitHub Actions キャッシュをクリア
+          echo "Clearing GitHub Actions cache..."
+          sudo rm -rf $GITHUB_WORKSPACE/.git/objects
+          sudo rm -rf /tmp/*
+          
+          # 環境変数でキャッシュを無効化
+          echo "Cache invalidation timestamp: ${{ env.TIMESTAMP }}"
+          echo "GitHub run ID: ${{ github.run_id }}"
+          echo "GitHub run number: ${{ github.run_number }}"
 
       - name: Setup Azure CLI
         run: |
@@ -133,10 +153,20 @@ jobs:
 
       - name: Clear cache and setup environment
         run: |
-          # キャッシュをクリア
+          # システムキャッシュをクリア
           sudo rm -rf /var/lib/apt/lists/*
           sudo apt-get clean
           sudo apt-get update
+          
+          # GitHub Actions キャッシュをクリア
+          echo "Clearing GitHub Actions cache..."
+          sudo rm -rf $GITHUB_WORKSPACE/.git/objects
+          sudo rm -rf /tmp/*
+          
+          # 環境変数でキャッシュを無効化
+          echo "Cache invalidation timestamp: ${{ env.TIMESTAMP }}"
+          echo "GitHub run ID: ${{ github.run_id }}"
+          echo "GitHub run number: ${{ github.run_number }}"
 
       - name: Setup Azure CLI
         run: |
@@ -198,10 +228,20 @@ jobs:
 
       - name: Clear cache and setup environment
         run: |
-          # キャッシュをクリア
+          # システムキャッシュをクリア
           sudo rm -rf /var/lib/apt/lists/*
           sudo apt-get clean
           sudo apt-get update
+          
+          # GitHub Actions キャッシュをクリア
+          echo "Clearing GitHub Actions cache..."
+          sudo rm -rf $GITHUB_WORKSPACE/.git/objects
+          sudo rm -rf /tmp/*
+          
+          # 環境変数でキャッシュを無効化
+          echo "Cache invalidation timestamp: ${{ env.TIMESTAMP }}"
+          echo "GitHub run ID: ${{ github.run_id }}"
+          echo "GitHub run number: ${{ github.run_number }}"
 
       - name: Setup Azure CLI
         run: |
