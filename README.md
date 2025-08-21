@@ -59,7 +59,13 @@ git clone https://github.com/NakamuraKotaro918/microsoft-ai-labo-smart-space.git
 cd microsoft-ai-labo-smart-space
 ```
 
-### 2. Azure インフラストラクチャのデプロイ
+### 2. 開発環境のセットアップ
+
+詳細な手順は [📚 開発ガイド](./docs/development/quickstart.md) を参照してください。
+
+### 3. Azure インフラストラクチャのデプロイ
+
+詳細な手順は [🚀 Azure デプロイメントガイド](./docs/deployment/azure/overview.md) を参照してください。
 
 ```bash
 cd infrastructure
@@ -71,7 +77,7 @@ cd infrastructure
 ./deploy.sh prod
 ```
 
-### 3. アプリケーションのデプロイ
+### 4. アプリケーションのデプロイ
 
 ```bash
 # API アプリケーションのデプロイ
@@ -87,6 +93,13 @@ cd dashboard
 
 ```
 microsoft-ai-labo-smart-space/
+├── docs/                          # 📚 ガイド・ドキュメント集
+│   ├── README.md                  # メインガイドインデックス
+│   ├── deployment/                # デプロイメントガイド
+│   │   ├── azure/                 # Azure デプロイメント
+│   │   ├── github-actions/        # GitHub Actions 設定
+│   │   └── iot-hub/               # IoT Hub 設定
+│   └── development/               # 開発ガイド
 ├── infrastructure/                 # Azure Bicep インフラストラクチャ
 │   ├── main.bicep                 # メインテンプレート
 │   ├── parameters.dev.json        # 開発環境パラメータ
