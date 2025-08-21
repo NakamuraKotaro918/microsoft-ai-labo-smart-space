@@ -1,0 +1,48 @@
+name: Test Azure CLI Setup
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-azure-cli:
+    name: Test Azure CLI Installation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Test Method 1 - Direct Installation
+        run: |
+          echo "Testing direct installation method..."
+          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+          az version
+          echo "✅ Direct installation successful"
+
+      - name: Test Method 2 - Using apt
+        run: |
+          echo "Testing apt installation method..."
+          sudo apt-get update
+          sudo apt-get install -y ca-certificates curl apt-transport-https lsb-release gnupg
+          sudo mkdir -p /etc/apt/keyrings
+          curl -sLS https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /etc/apt/keyrings/microsoft.gpg > /dev/null
+          sudo chmod go+r /etc/apt/keyrings/microsoft.gpg
+          AZ_REPO=$(lsb_release -cs)
+          echo "deb [arch=`dpkg --print-architecture` signed-by=/etc/apt/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | sudo tee /etc/apt/sources.list.d/azure-cli.list
+          sudo apt-get update
+          sudo apt-get install azure-cli
+          az version
+          echo "✅ Apt installation successful"
+
+      - name: Test Method 3 - Using snap
+        run: |
+          echo "Testing snap installation method..."
+          sudo snap install azure-cli --classic
+          az version
+          echo "✅ Snap installation successful"
+
+      - name: Test Method 4 - Using pip
+        run: |
+          echo "Testing pip installation method..."
+          pip install azure-cli
+          az version
+          echo "✅ Pip installation successful"

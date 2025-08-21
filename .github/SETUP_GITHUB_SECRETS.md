@@ -138,8 +138,19 @@ E: Could not open lock file /var/lib/apt/lists/lock - open (13: Permission denie
 ```
 
 **解決策**: 
-- GitHub Actionsワークフローで `azure/setup-azure-cli@v1` アクションを使用
-- または `sudo` を使用してインストール: `curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash`
+- `sudo` を使用してインストール: `curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash`
+- または公式のaptリポジトリを使用
+- または `pip install azure-cli` を使用
+
+#### GitHub Actions アクションエラー
+```
+Error: Unable to resolve action azure/setup-azure-cli, repository not found
+```
+
+**解決策**:
+- 直接インストール方法を使用: `curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash`
+- または `pip install azure-cli` を使用
+- または `snap install azure-cli --classic` を使用
 
 #### 認証エラー
 ```
