@@ -160,19 +160,20 @@ resource iotHub 'Microsoft.Devices/IotHubs@2021-07-02' = {
 }
 
 // IoT Hub デバイス - 快適君
-resource iotDevice 'Microsoft.Devices/IotHubs/devices@2021-07-02' = {
-  parent: iotHub
-  name: 'kaiteki-001'
-  properties: {
-    status: 'enabled'
-    authentication: {
-      symmetricKey: {
-        primaryKey: 'auto-generated'
-        secondaryKey: 'auto-generated'
-      }
-    }
-  }
-}
+// 注意: デバイスはデプロイ後に手動で作成することを推奨
+// resource iotDevice 'Microsoft.Devices/IotHubs/devices@2021-07-02' = {
+//   parent: iotHub
+//   name: 'kaiteki-001'
+//   properties: {
+//     status: 'enabled'
+//     authentication: {
+//       symmetricKey: {
+//         primaryKey: 'auto-generated'
+//         secondaryKey: 'auto-generated'
+//       }
+//     }
+//   }
+// }
 
 // App Service Plan
 resource appServicePlan 'Microsoft.Web/serverfarms@2021-02-01' = {
@@ -204,7 +205,7 @@ resource dashboardApi 'Microsoft.Web/sites@2021-02-01' = {
         }
         {
           name: 'COSMOS_KEY'
-          value: listKeys(cosmosAccount.id, cosmosAccount.apiVersion).primaryMasterKey
+          value: cosmosAccount.listKeys().primaryMasterKey
         }
         {
           name: 'COSMOS_DATABASE'
@@ -277,6 +278,7 @@ resource postgresqlDatabase 'Microsoft.DBforPostgreSQL/servers/databases@2017-12
   properties: {
     charset: 'utf8'
     collation: 'utf8_general_ci'
+    createMode: 'Default'
   }
 }
 

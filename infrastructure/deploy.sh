@@ -128,19 +128,21 @@ fi
 
 # テンプレート検証
 if [ "$VALIDATE" = true ]; then
-    log_info "Bicep テンプレートを検証中..."
-    az deployment group validate \
-        --resource-group "$RESOURCE_GROUP_NAME" \
-        --template-file "$TEMPLATE_FILE" \
-        --parameters "$PARAMETERS_FILE"
-    
-    if [ $? -eq 0 ]; then
-        log_success "テンプレート検証成功"
-    else
-        log_error "テンプレート検証失敗"
-        exit 1
-    fi
-    exit 0
+  log_info "Bicep テンプレートを検証中..."
+  az deployment group validate \
+    --resource-group "$RESOURCE_GROUP_NAME" \
+    --template-file "$TEMPLATE_FILE" \
+    --parameters "$PARAMETERS_FILE" \
+    --output table
+  
+  if [ $? -eq 0 ]; then
+    log_success "テンプレート検証成功"
+    log_info "警告があっても、デプロイは可能です"
+  else
+    log_error "テンプレート検証失敗"
+    exit 1
+  fi
+  exit 0
 fi
 
 # What-if 実行
