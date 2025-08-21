@@ -183,3 +183,27 @@ coverage/
 
 # Server files
 server.log
+
+# Development and test files
+test-server.py
+demo-server.py
+*たたき*.txt
+
+# Python cache (additional)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
