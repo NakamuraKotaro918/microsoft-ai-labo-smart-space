@@ -11,6 +11,9 @@
     "location": {
       "value": "Japan East"
     },
+    "resourceGroupName": {
+      "value": "MS-Lab-Proj-RG"
+    },
     "adminPassword": {
       "value": "P@ssw0rd123!"
     },

@@ -189,6 +189,9 @@ test-server.py
 demo-server.py
 *たたき*.txt
 
+# Git templates
+!.gitmessage
+
 # Python cache (additional)
 __pycache__/
 *.pyc

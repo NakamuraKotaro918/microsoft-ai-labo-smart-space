@@ -10,6 +10,9 @@ Microsoft AI Labo スマート空間最適化ダッシュボードは、エン�
 - **環境監視**: 快適君による温湿度・CO2・照度データの収集
 - **リアルタイムダッシュボード**: Webベースの統合監視画面
 - **データ分析**: 行動パターン・環境最適化の分析
+- **データ保存**: Azure Blob Storageによる長期データ保存
+- **全文検索**: Azure AI Searchによる高度な検索・分析機能
+- **デバイス管理**: Azure IoT Hubによる統合デバイス管理
 
 ## 🏗️ システムアーキテクチャ
 
@@ -22,7 +25,7 @@ Microsoft AI Labo スマート空間最適化ダッシュボードは、エン�
           ▼                      ▼                      ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                    Azure IoT Hub                               │
-│                    (MQTT Broker)                               │
+│                    (MQTT Broker + デバイス管理)                 │
 └─────────────────────────┬───────────────────────────────────────┘
                           │
                           ▼
@@ -35,6 +38,18 @@ Microsoft AI Labo スマート空間最適化ダッシュボードは、エン�
 ┌─────────────────────────────────────────────────────────────────┐
 │                    Azure Cosmos DB                             │
 │                    (NoSQL Database)                            │
+└─────────────────────────┬───────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    Azure Blob Storage                          │
+│                    (長期データ保存・画像保存)                   │
+└─────────────────────────┬───────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    Azure AI Search                             │
+│                    (全文検索・分析)                             │
 └─────────────────────────┬───────────────────────────────────────┘
                           │
                           ▼
@@ -67,6 +82,8 @@ cd microsoft-ai-labo-smart-space
 
 詳細な手順は [🚀 Azure デプロイメントガイド](./docs/deployment/azure/overview.md) を参照してください。
 
+**注意**: このプロジェクトは、Azure管理者から提供されたリソースグループ「MS-Lab-Proj-RG」を使用します。
+
 ```bash
 cd infrastructure
 
@@ -77,7 +94,11 @@ cd infrastructure
 ./deploy.sh prod
 ```
 
-### 4. アプリケーションのデプロイ
+### 4. Blob Storage と AI Search のセットアップ
+
+詳細な手順は [📦 Blob Storage と AI Search セットアップガイド](./docs/deployment/azure/blob-storage-ai-search-setup.md) を参照してください。
+
+### 5. アプリケーションのデプロイ
 
 ```bash
 # API アプリケーションのデプロイ
@@ -97,11 +118,12 @@ microsoft-ai-labo-smart-space/
 │   ├── README.md                  # メインガイドインデックス
 │   ├── deployment/                # デプロイメントガイド
 │   │   ├── azure/                 # Azure デプロイメント
+│   │   │   └── blob-storage-ai-search-setup.md  # Blob Storage & AI Search セットアップ
 │   │   ├── github-actions/        # GitHub Actions 設定
 │   │   └── iot-hub/               # IoT Hub 設定
 │   └── development/               # 開発ガイド
 ├── infrastructure/                 # Azure Bicep インフラストラクチャ
-│   ├── main.bicep                 # メインテンプレート
+│   ├── main.bicep                 # メインテンプレート（Blob Storage & AI Search含む）
 │   ├── parameters.dev.json        # 開発環境パラメータ
 │   ├── parameters.prod.json       # 本番環境パラメータ
 │   ├── deploy.sh                  # デプロイスクリプト
@@ -109,7 +131,10 @@ microsoft-ai-labo-smart-space/
 ├── azure-data-pipeline/           # データパイプライン
 │   └── api/
 │       └── dashboard-api/         # Dashboard API
-│           ├── app.py             # Flask アプリケーション
+│           ├── app.py             # Flask アプリケーション（Blob Storage & AI Search統合）
+│           ├── blob_storage.py    # Blob Storage操作モジュール
+│           ├── ai_search.py       # AI Search操作モジュール
+│           ├── iot_hub_manager.py # IoT Hub管理モジュール
 │           ├── mqtt_client.py     # MQTT クライアント
 │           ├── requirements.txt   # Python 依存関係
 │           └── README_MQTT.md     # MQTT ドキュメント
@@ -134,8 +159,10 @@ microsoft-ai-labo-smart-space/
 ### バックエンド
 - **Python Flask**: API サーバー
 - **Azure App Service**: ホスティング
-- **Azure IoT Hub**: MQTT ブローカー
+- **Azure IoT Hub**: MQTT ブローカー + デバイス管理
 - **Azure Cosmos DB**: NoSQL データベース
+- **Azure Blob Storage**: 長期データ保存・画像保存
+- **Azure AI Search**: 全文検索・分析
 
 ### インフラストラクチャ
 - **Azure Bicep**: インフラストラクチャ・アズ・コード
@@ -150,9 +177,11 @@ microsoft-ai-labo-smart-space/
 - **SmartPhone**: HTTP/API で行動分析データを送信
 
 ### 2. データ処理
-- **Azure IoT Hub**: MQTT データの受信・処理
+- **Azure IoT Hub**: MQTT データの受信・処理 + デバイス管理
 - **Azure App Service**: API によるデータ統合
-- **Azure Cosmos DB**: データの永続化
+- **Azure Cosmos DB**: リアルタイムデータの永続化
+- **Azure Blob Storage**: 長期保存用データの保存
+- **Azure AI Search**: 検索用インデックスの作成
 
 ### 3. データ可視化
 - **Web ダッシュボード**: リアルタイムデータ表示
@@ -165,6 +194,8 @@ microsoft-ai-labo-smart-space/
 - **Azure AD**: 認証・認可
 - **TLS/SSL**: 通信暗号化
 - **RBAC**: ロールベースアクセス制御
+- **Blob Storage**: 保存時暗号化
+- **IoT Hub**: デバイス認証
 
 ## 📈 監視・ログ
 
@@ -223,6 +254,7 @@ cd infrastructure
 ## 📚 ドキュメント
 
 - [インフラストラクチャガイド](infrastructure/README.md)
+- [Blob Storage & AI Search セットアップガイド](docs/deployment/azure/blob-storage-ai-search-setup.md)
 - [MQTT クライアントガイド](azure-data-pipeline/api/dashboard-api/README_MQTT.md)
 - [Azure IoT Hub セットアップ](azure-data-pipeline/api/dashboard-api/azure_iot_hub_setup.md)
 - [ダッシュボードガイド](dashboard/README.md)

@@ -89,7 +89,7 @@ fi
 
 # 設定
 PROJECT_NAME="mass-smart-space"
-RESOURCE_GROUP_NAME="rg-${PROJECT_NAME}-${ENVIRONMENT}"
+RESOURCE_GROUP_NAME="MS-Lab-Proj-RG"
 LOCATION="Japan East"
 TEMPLATE_FILE="main.bicep"
 PARAMETERS_FILE="parameters.${ENVIRONMENT}.json"
@@ -116,14 +116,13 @@ log_info "サブスクリプション: $SUBSCRIPTION_NAME ($SUBSCRIPTION_ID)"
 
 # リソースグループの存在確認
 if az group show --name "$RESOURCE_GROUP_NAME" > /dev/null 2>&1; then
-    log_warning "リソースグループ '$RESOURCE_GROUP_NAME' は既に存在します。"
+    log_info "リソースグループ '$RESOURCE_GROUP_NAME' を使用します。"
+    RG_LOCATION=$(az group show --name "$RESOURCE_GROUP_NAME" --query location -o tsv)
+    log_info "リソースグループのロケーション: $RG_LOCATION"
 else
-    log_info "リソースグループ '$RESOURCE_GROUP_NAME' を作成中..."
-    az group create \
-        --name "$RESOURCE_GROUP_NAME" \
-        --location "$LOCATION" \
-        --tags project="$PROJECT_NAME" environment="$ENVIRONMENT" managedBy="bicep"
-    log_success "リソースグループ作成完了"
+    log_error "リソースグループ '$RESOURCE_GROUP_NAME' が存在しません。"
+    log_error "Azure管理者にリソースグループへのアクセス権限を確認してください。"
+    exit 1
 fi
 
 # テンプレート検証

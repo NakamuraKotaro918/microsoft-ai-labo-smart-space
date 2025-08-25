@@ -10,6 +10,9 @@ param environment string = 'dev'
 @description('Azure リージョン')
 param location string = 'Japan East'
 
+@description('リソースグループ名')
+param resourceGroupName string = 'MS-Lab-Proj-RG'
+
 @description('管理者パスワード')
 @secure()
 param adminPassword string
@@ -239,6 +242,38 @@ resource dashboardApi 'Microsoft.Web/sites@2021-02-01' = {
           name: 'SCM_DO_BUILD_DURING_DEPLOYMENT'
           value: 'true'
         }
+        {
+          name: 'STORAGE_ACCOUNT_NAME'
+          value: storageAccount.name
+        }
+        {
+          name: 'STORAGE_ACCOUNT_KEY'
+          value: storageAccount.listKeys().keys[0].value
+        }
+        {
+          name: 'BLOB_CONTAINER_SENSOR'
+          value: 'sensor-data'
+        }
+        {
+          name: 'BLOB_CONTAINER_ANALYSIS'
+          value: 'analysis-data'
+        }
+        {
+          name: 'BLOB_CONTAINER_IMAGE'
+          value: 'image-data'
+        }
+        {
+          name: 'SEARCH_SERVICE_NAME'
+          value: searchService.name
+        }
+        {
+          name: 'SEARCH_SERVICE_KEY'
+          value: searchService.listAdminKeys().primaryKey
+        }
+        {
+          name: 'SEARCH_INDEX_NAME'
+          value: 'sensor-data-index'
+        }
       ]
     }
   }
@@ -259,13 +294,14 @@ resource postgresqlServer 'Microsoft.DBforPostgreSQL/servers@2017-12-01' = {
     administratorLogin: postgresqlAdminUsername
     administratorLoginPassword: adminPassword
     version: '11'
+    createMode: 'Default'
     sslEnforcement: 'Enabled'
     minimalTlsVersion: 'TLS1_2'
     storageProfile: {
       storageMB: 5120
       backupRetentionDays: 7
       geoRedundantBackup: 'Disabled'
-      autoGrow: 'Enabled'
+      storageAutogrow: 'Enabled'
     }
   }
   tags: tags
@@ -297,7 +333,223 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2021-09-01' = {
   tags: tags
 }
 
+// Blob Service
+resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2021-09-01' = {
+  parent: storageAccount
+  name: 'default'
+  properties: {
+    cors: {
+      corsRules: [
+        {
+          allowedOrigins: ['*']
+          allowedMethods: ['GET', 'POST', 'PUT', 'DELETE', 'HEAD']
+          allowedHeaders: ['*']
+          exposedHeaders: ['*']
+          maxAgeInSeconds: 86400
+        }
+      ]
+    }
+  }
+}
 
+// Blob Container - センサーデータ
+resource sensorDataBlobContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2021-09-01' = {
+  parent: blobService
+  name: 'sensor-data'
+  properties: {
+    publicAccess: 'None'
+    metadata: {
+      type: 'sensor-data'
+      description: 'センサーデータのBlobストレージ'
+    }
+  }
+}
+
+// Blob Container - 分析データ
+resource analysisDataBlobContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2021-09-01' = {
+  parent: blobService
+  name: 'analysis-data'
+  properties: {
+    publicAccess: 'None'
+    metadata: {
+      type: 'analysis-data'
+      description: '分析データのBlobストレージ'
+    }
+  }
+}
+
+// Blob Container - 画像データ
+resource imageDataBlobContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2021-09-01' = {
+  parent: blobService
+  name: 'image-data'
+  properties: {
+    publicAccess: 'None'
+    metadata: {
+      type: 'image-data'
+      description: 'AITRIOS画像データのBlobストレージ'
+    }
+  }
+}
+
+// AI Search サービス
+resource searchService 'Microsoft.Search/searchServices@2020-08-01' = {
+  name: 'search-${replace(projectName, '-', '')}${environment}'
+  location: location
+  sku: {
+    name: 'standard'
+  }
+  properties: {
+    replicaCount: 1
+    partitionCount: 1
+    hostingMode: 'default'
+  }
+  tags: tags
+}
+
+// AI Search インデックス - センサーデータ
+resource sensorDataIndex 'Microsoft.Search/searchServices/indexes@2020-08-01' = {
+  parent: searchService
+  name: 'sensor-data-index'
+  properties: {
+    fields: [
+      {
+        name: 'id'
+        type: 'Edm.String'
+        key: true
+        searchable: false
+        filterable: false
+        sortable: false
+        facetable: false
+        retrievable: true
+      }
+      {
+        name: 'deviceId'
+        type: 'Edm.String'
+        searchable: true
+        filterable: true
+        sortable: true
+        facetable: true
+        retrievable: true
+      }
+      {
+        name: 'deviceType'
+        type: 'Edm.String'
+        searchable: true
+        filterable: true
+        sortable: true
+        facetable: true
+        retrievable: true
+      }
+      {
+        name: 'timestamp'
+        type: 'Edm.DateTimeOffset'
+        searchable: false
+        filterable: true
+        sortable: true
+        facetable: false
+        retrievable: true
+      }
+      {
+        name: 'temperature'
+        type: 'Edm.Double'
+        searchable: false
+        filterable: true
+        sortable: true
+        facetable: true
+        retrievable: true
+      }
+      {
+        name: 'humidity'
+        type: 'Edm.Double'
+        searchable: false
+        filterable: true
+        sortable: true
+        facetable: true
+        retrievable: true
+      }
+      {
+        name: 'co2'
+        type: 'Edm.Double'
+        searchable: false
+        filterable: true
+        sortable: true
+        facetable: true
+        retrievable: true
+      }
+      {
+        name: 'personCount'
+        type: 'Edm.Int32'
+        searchable: false
+        filterable: true
+        sortable: true
+        facetable: true
+        retrievable: true
+      }
+      {
+        name: 'content'
+        type: 'Edm.String'
+        searchable: true
+        filterable: false
+        sortable: false
+        facetable: false
+        retrievable: true
+        analyzer: 'ja.microsoft'
+      }
+    ]
+    suggesters: [
+      {
+        name: 'sg'
+        searchMode: 'analyzingInfixMatching'
+        sourceFields: ['deviceId', 'deviceType', 'content']
+      }
+    ]
+  }
+}
+
+// AI Search データソース - Cosmos DB
+resource cosmosDataSource 'Microsoft.Search/searchServices/dataSources@2020-08-01' = {
+  parent: searchService
+  name: 'cosmos-datasource'
+  properties: {
+    type: 'cosmosdb'
+    credentials: {
+      connectionString: 'AccountEndpoint=${cosmosAccount.properties.documentEndpoint};AccountKey=${cosmosAccount.listKeys().primaryMasterKey};Database=smart-space-db'
+    }
+    container: {
+      name: 'sensor-data'
+      query: 'SELECT * FROM c WHERE c.type = "sensor_data"'
+    }
+    dataChangeDetectionPolicy: {
+      '@odata.type': '#Microsoft.Azure.Search.HighWaterMarkChangeDetectionPolicy'
+      highWaterMarkColumnName: '_ts'
+    }
+    dataDeletionDetectionPolicy: {
+      '@odata.type': '#Microsoft.Azure.Search.SoftDeleteColumnDeletionDetectionPolicy'
+      softDeleteColumnName: 'isDeleted'
+      softDeleteMarkerValue: 'true'
+    }
+  }
+}
+
+// AI Search インデクサー
+resource searchIndexer 'Microsoft.Search/searchServices/indexers@2020-08-01' = {
+  parent: searchService
+  name: 'sensor-data-indexer'
+  properties: {
+    dataSourceName: cosmosDataSource.name
+    targetIndexName: sensorDataIndex.name
+    schedule: {
+      interval: 'PT1H'
+    }
+    parameters: {
+      configuration: {
+        queryTimeout: '00:05:00'
+        maxFailedItems: 10
+        maxFailedItemsPerBatch: 5
+      }
+    }
+  }
+}
 
 // Application Insights
 resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
@@ -374,7 +626,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2021-06-01-preview' = {
 }
 
 // Outputs
-output resourceGroupName string = 'rg-${projectName}-${environment}'
+output resourceGroupName string = resourceGroupName
 output cosmosAccountName string = cosmosAccount.name
 output cosmosEndpoint string = cosmosAccount.properties.documentEndpoint
 output iotHubName string = iotHub.name
@@ -384,3 +636,8 @@ output cdnEndpointUrl string = cdnEndpoint.properties.hostName
 output keyVaultName string = keyVault.name
 output appInsightsKey string = appInsights.properties.InstrumentationKey
 output storageAccountName string = storageAccount.name
+output searchServiceName string = searchService.name
+output searchServiceUrl string = 'https://${searchService.name}.search.windows.net'
+output blobContainerSensor string = sensorDataBlobContainer.name
+output blobContainerAnalysis string = analysisDataBlobContainer.name
+output blobContainerImage string = imageDataBlobContainer.name
