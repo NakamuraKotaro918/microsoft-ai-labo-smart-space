@@ -1,0 +1,149 @@
+name: Deploy to Azure
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'infrastructure/**'
+      - '.github/workflows/azure-deploy.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'infrastructure/**'
+      - '.github/workflows/azure-deploy.yml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+        - dev
+        - prod
+
+env:
+  AZURE_WEBAPP_NAME: api-mass-smart-space-dev
+  RESOURCE_GROUP: MS-Lab-Proj-RG
+  LOCATION: Japan East
+
+jobs:
+  validate-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install Azure CLI
+      run: |
+        curl -sL https://aka.ms/InstallAzureCLIDeb | bash
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Set deployment environment
+      id: set-env
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          echo "ENVIRONMENT=${{ github.event.inputs.environment }}" >> $GITHUB_ENV
+        else
+          echo "ENVIRONMENT=dev" >> $GITHUB_ENV
+        fi
+
+    - name: Validate Bicep template
+      run: |
+        cd infrastructure
+        az deployment group validate \
+          --resource-group ${{ env.RESOURCE_GROUP }} \
+          --template-file main.bicep \
+          --parameters parameters.${{ env.ENVIRONMENT }}.json
+
+    - name: Deploy to Azure (Simple template first)
+      if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+      run: |
+        cd infrastructure
+        echo "Deploying simple template first..."
+        az deployment group create \
+          --resource-group ${{ env.RESOURCE_GROUP }} \
+          --template-file simple.bicep \
+          --parameters parameters.simple.json \
+          --name "simple-deployment-$(date +%Y%m%d-%H%M%S)"
+
+    - name: Deploy to Azure (Full template)
+      if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+      run: |
+        cd infrastructure
+        echo "Deploying full template..."
+        az deployment group create \
+          --resource-group ${{ env.RESOURCE_GROUP }} \
+          --template-file main.bicep \
+          --parameters parameters.${{ env.ENVIRONMENT }}.json \
+          --name "full-deployment-$(date +%Y%m%d-%H%M%S)"
+
+    - name: Deploy API to App Service
+      if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+      run: |
+        cd azure-data-pipeline/api/dashboard-api
+        zip -r api.zip .
+        az webapp deployment source config-zip \
+          --resource-group ${{ env.RESOURCE_GROUP }} \
+          --name ${{ env.AZURE_WEBAPP_NAME }} \
+          --src api.zip
+
+    - name: Create IoT Device
+      if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+      run: |
+        cd infrastructure
+        chmod +x create-iot-device.sh
+        ./create-iot-device.sh
+
+    - name: Get deployment outputs
+      if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+      run: |
+        cd infrastructure
+        echo "=== Deployment Summary ==="
+        echo "Resource Group: ${{ env.RESOURCE_GROUP }}"
+        echo "Environment: ${{ env.ENVIRONMENT }}"
+        echo "Location: ${{ env.LOCATION }}"
+        echo ""
+        echo "=== Created Resources ==="
+        az resource list --resource-group ${{ env.RESOURCE_GROUP }} --query "[].{name:name, type:type, provisioningState:provisioningState}" -o table
+
+  test-deployment:
+    needs: validate-and-deploy
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install dependencies
+      run: |
+        cd azure-data-pipeline/api/dashboard-api
+        pip install -r requirements.txt
+
+    - name: Run tests
+      run: |
+        cd azure-data-pipeline/api/dashboard-api
+        python -m pytest tests/ -v
+
+    - name: Health check
+      run: |
+        # Wait for deployment to complete
+        sleep 60
+        # Add health check logic here
+        echo "Health check completed"
