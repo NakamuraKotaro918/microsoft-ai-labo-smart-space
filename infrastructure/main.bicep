@@ -8,7 +8,7 @@ param projectName string = 'mass-smart-space'
 param environment string = 'dev'
 
 @description('Azure リージョン')
-param location string = 'Japan East'
+param location string = 'East Asia'
 
 @description('リソースグループ名')
 param resourceGroupName string = 'MS-Lab-Proj-RG'
@@ -178,22 +178,22 @@ resource iotHub 'Microsoft.Devices/IotHubs@2021-07-02' = {
 //   }
 // }
 
-// App Service Plan
+// App Service Plan - Consumption SKU (VMクォータを消費しない)
 resource appServicePlan 'Microsoft.Web/serverfarms@2021-02-01' = {
   name: 'asp-${projectName}-${environment}'
   location: location
   sku: {
-    name: appServicePlanSku
-    tier: 'Basic'
+    name: 'Y1'  // Consumption SKU
+    tier: 'Dynamic'
   }
-  kind: 'linux'
+  kind: 'functionapp'
   properties: {
-    reserved: true
+    reserved: false
   }
   tags: tags
 }
 
-// App Service - Dashboard API
+// App Service - Dashboard API (Function Appとして)
 resource dashboardApi 'Microsoft.Web/sites@2021-02-01' = {
   name: 'api-${projectName}-${environment}'
   location: location
@@ -274,41 +274,51 @@ resource dashboardApi 'Microsoft.Web/sites@2021-02-01' = {
           name: 'SEARCH_INDEX_NAME'
           value: 'sensor-data-index'
         }
+        {
+          name: 'FUNCTIONS_WORKER_RUNTIME'
+          value: 'python'
+        }
+        {
+          name: 'FUNCTIONS_EXTENSION_VERSION'
+          value: '~4'
+        }
       ]
     }
   }
   tags: tags
 }
 
-// PostgreSQL サーバー
-resource postgresqlServer 'Microsoft.DBforPostgreSQL/servers@2017-12-01' = {
+// Azure Database for PostgreSQL Flexible Server (VMクォータを消費しない)
+resource postgresqlServer 'Microsoft.DBforPostgreSQL/flexibleServers@2021-06-01' = {
   name: postgresqlServerName
   location: location
   sku: {
-    name: 'B_Gen5_1'
-    tier: 'Basic'
-    capacity: 1
-    family: 'Gen5'
+    name: 'Standard_B1ms'
+    tier: 'Burstable'
   }
   properties: {
     administratorLogin: postgresqlAdminUsername
     administratorLoginPassword: adminPassword
-    version: '11'
-    createMode: 'Default'
-    sslEnforcement: 'Enabled'
-    minimalTlsVersion: 'TLS1_2'
-    storageProfile: {
-      storageMB: 5120
+    version: '14'
+    storage: {
+      storageSizeGB: 32
+    }
+    backup: {
       backupRetentionDays: 7
       geoRedundantBackup: 'Disabled'
-      storageAutogrow: 'Enabled'
+    }
+    highAvailability: {
+      mode: 'Disabled'
+    }
+    maintenanceWindow: {
+      customWindow: 'Disabled'
     }
   }
   tags: tags
 }
 
 // PostgreSQL データベース
-resource postgresqlDatabase 'Microsoft.DBforPostgreSQL/servers/databases@2017-12-01' = {
+resource postgresqlDatabase 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2021-06-01' = {
   parent: postgresqlServer
   name: 'smart_space_db'
   properties: {
@@ -606,6 +616,43 @@ resource cdnEndpoint 'Microsoft.Cdn/profiles/endpoints@2021-06-01' = {
   }
 }
 
+// Static Web App - VMクォータを消費しない代替案
+resource staticWebApp 'Microsoft.Web/staticSites@2021-02-01' = {
+  name: 'swa-${projectName}-${environment}'
+  location: location
+  sku: {
+    name: 'Free'
+    tier: 'Free'
+  }
+  properties: {
+    branch: 'main'
+    buildProperties: {
+      apiLocation: '/api'
+      appLocation: '/'
+      outputLocation: '/dist'
+    }
+  }
+  tags: tags
+}
+
+// Static Web App の API 設定
+resource staticWebAppApi 'Microsoft.Web/staticSites/config@2021-02-01' = {
+  parent: staticWebApp
+  name: 'api'
+  properties: {
+    apiKey: 'auto-generated'
+    cors: {
+      allowedOrigins: ['*']
+    }
+    routes: [
+      {
+        route: '/api/*'
+        allowedRoles: ['anonymous']
+      }
+    ]
+  }
+}
+
 // Key Vault
 resource keyVault 'Microsoft.KeyVault/vaults@2021-06-01-preview' = {
   name: 'kv-${replace(projectName, '-', '')}${environment}'
@@ -633,6 +680,7 @@ output iotHubName string = iotHub.name
 output iotHubHostName string = '${iotHub.name}.azure-devices.net'
 output dashboardApiUrl string = dashboardApi.properties.defaultHostName
 output cdnEndpointUrl string = cdnEndpoint.properties.hostName
+output staticWebAppUrl string = staticWebApp.properties.defaultHostname
 output keyVaultName string = keyVault.name
 output appInsightsKey string = appInsights.properties.InstrumentationKey
 output storageAccountName string = storageAccount.name
