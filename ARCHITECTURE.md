@@ -2,7 +2,7 @@
 
 ## システム概要
 
-SONY AITRIOS、快適君からリアルタイムデータを収集し、Azureクラウド上で処理・分析して、ダッシュボードで可視化するスマート空間最適化システムです。AITRIOSへの人物検出確認APIを定期的に実行し、人物を検出した際に画像データやメタデータを取得します。
+SONY AITRIOS、Google Gemini API、快適君からリアルタイムデータを収集し、Azureクラウド上で処理・分析して、ダッシュボードで可視化するスマート空間最適化システムです。
 
 ## 最新アーキテクチャ図
 
@@ -19,9 +19,10 @@ graph TB
         IOTHUB[Azure IoT Hub<br/>デバイス接続・管理]
     end
 
-    %% Azure Functions
+    %% データ処理層
     subgraph "データ処理層"
         FUNCTIONS[Azure Functions<br/>データ収集・正規化・分析]
+        VISION[Azure AI Vision Context<br/>画像分析・行動パターン抽出]
     end
 
     %% データストレージ層
@@ -60,13 +61,21 @@ graph TB
     end
 
     %% データフロー
-    FUNCTIONS -->|"HTTP/HTTPS<br/>人物検出確認API<br/>定期的なポーリング"| AITRIOS
-    AITRIOS -->|"HTTP/HTTPS<br/>人物検知メタデータ<br/>年齢・性別・人数"| FUNCTIONS
-    AITRIOS -->|"HTTP/HTTPS<br/>画像データ<br/>JPG/PNG形式"| FUNCTIONS
+    %% 1. 外部データソース → IoT接続層
     KAITEKI -->|"MQTT(S) over TLS<br/>環境センサーデータ<br/>温湿度・CO2・照度"| IOTHUB
     
+    %% 2. IoT接続層 → データ処理層
     IOTHUB -->|"IoT Hub SDK<br/>統合IoTデータ<br/>JSON形式"| FUNCTIONS
     
+    %% 3. データ処理層 → 外部データソース（常時API呼び出し）
+    FUNCTIONS -->|"HTTP/HTTPS<br/>人物検出確認API<br/>定期的なポーリング"| AITRIOS
+    
+    %% 4. 外部データソース → データ処理層（人物検知時）
+    AITRIOS -->|"HTTP/HTTPS<br/>人物検知メタデータ<br/>年齢・性別・人数"| FUNCTIONS
+    AITRIOS -->|"HTTP/HTTPS<br/>画像データ<br/>JPG/PNG形式"| FUNCTIONS
+    
+    FUNCTIONS -->|"Vision API SDK<br/>画像データ<br/>行動パターン分析"| VISION
+    VISION -->|"REST API<br/>分析結果<br/>行動パターン・感情・行動スコア"| FUNCTIONS
     FUNCTIONS -->|"Cosmos DB SDK<br/>正規化データ<br/>センサー・分析・来場者"| COSMOS
     FUNCTIONS -->|"Blob Storage SDK<br/>画像データ<br/>AITRIOS画像"| BLOB
     
@@ -92,7 +101,7 @@ graph TB
     classDef iot fill:#ff6b35,stroke:#333,stroke-width:2px,color:#fff
 
     class AITRIOS,KAITEKI external
-    class FUNCTIONS,API,STATIC azure
+    class FUNCTIONS,API,STATIC,VISION azure
     class COSMOS,BLOB,USERS,SYSTEM_LOGS,SENSOR,ANALYSIS,USERS,SYSTEM_LOGS,AITRIOS_IMAGES azure
     class INSIGHTS,KEYVAULT monitoring
     class IOTHUB iot
@@ -104,18 +113,13 @@ graph TB
 
 #### **SONY AITRIOS（人物検知・分析）**
 - **機能**: エントランスでの人物検知・属性分析
-- **出力データ**: 年齢、性別、人数、信頼度
+- **出力データ**: 年齢、性別、人数、信頼度、画像データ
 - **通信方式**: HTTP/HTTPS（REST API）
 - **処理頻度**: 人物検知時（リアルタイム）
-- **データサイズ**: 数KB（メタデータ）
-
-#### **AITRIOS人物検出確認API**
-- **機能**: 定期的な人物検出確認とデータ取得
-- **実行方式**: Azure Functionsからの定期的なポーリング
-- **確認頻度**: 1-5分間隔（設定可能）
-- **取得データ**: 人物検知メタデータ、画像データ
-- **通信方式**: HTTP/HTTPS REST API
+- **API呼び出し**: Azure Functionsからの定期的なポーリング
 - **データサイズ**: 数KB（メタデータ）+ 画像ファイル
+
+
 
 #### **快適君（環境センサー）**
 - **機能**: 温湿度、CO2濃度、照明状態の監視
@@ -138,16 +142,29 @@ graph TB
 #### **データ収集・正規化・分析**
 - **機能**: サーバーレスデータ処理
 - **処理内容**:
-  - AITRIOSへの定期的な人物検出確認API実行
   - データ形式の統一（JSON正規化）
   - データ検証・異常値検出
   - 時系列データの集計・分析
-  - 画像データの前処理・保存
+  - 画像データの前処理
 - **実行環境**: Python 3.11
 - **スケーリング**: 自動スケール（従量課金）
 - **料金**: 100万実行/月まで無料
 
-### 4. Azure Cosmos DB
+### 4. Azure AI Vision Context
+
+#### **画像分析・行動パターン抽出**
+- **機能**: AITRIOS画像の高度な分析・行動パターン抽出
+- **分析内容**:
+  - 人物の行動パターン分析
+  - 感情・表情分析
+  - 行動スコアリング
+  - 異常行動検知
+- **入力データ**: AITRIOS人物検知画像
+- **出力データ**: 行動分析結果、感情スコア、行動パターン
+- **API**: Computer Vision API、Face API
+- **料金**: 従量課金（1000トランザクション/月まで無料）
+
+### 5. Azure Cosmos DB
 
 #### **NoSQL データベース**
 - **機能**: 構造化データの保存・管理
@@ -160,7 +177,7 @@ graph TB
 - **インデックス**: 自動インデックス作成
 - **料金**: 1000 RU/秒まで無料
 
-### 5. Azure Blob Storage
+### 6. Azure Blob Storage
 
 #### **ファイル・画像データ保存**
 - **機能**: バイナリデータの保存・管理
@@ -170,7 +187,7 @@ graph TB
 - **アクセス制御**: Azure AD認証、SAS
 - **料金**: 使用量ベース（低コスト）
 
-### 6. Azure App Service
+### 7. Azure App Service
 
 #### **REST API サーバー**
 - **機能**: ダッシュボード用API提供
@@ -182,7 +199,7 @@ graph TB
 - **認証**: API Key認証
 - **料金**: F1プラン（無料）
 
-### 7. Azure Static Web Apps
+### 8. Azure Static Web Apps
 
 #### **ダッシュボードUI**
 - **機能**: Webダッシュボードの表示
@@ -194,7 +211,7 @@ graph TB
 - **デプロイ**: GitHub連携、自動ビルド
 - **料金**: 無料プラン
 
-### 8. Azure Key Vault
+### 9. Azure Key Vault
 
 #### **シークレット管理**
 - **機能**: 機密情報の安全な保存・管理
@@ -206,7 +223,7 @@ graph TB
 - **監査**: アクセスログ、アラート
 - **料金**: 10,000操作/月まで無料
 
-### 9. Application Insights
+### 10. Application Insights
 
 #### **監視・ログ**
 - **機能**: アプリケーション・サービスの監視
@@ -245,7 +262,7 @@ graph TB
 ```json
 {
   "id": "uuid",
-  "source": "aitrios|kaiteki",
+  "source": "aitrios|gemini|kaiteki",
   "timestamp": "2024-01-01T12:00:00Z",
   "deviceId": "device-001",
   "deviceType": "aitrios",
