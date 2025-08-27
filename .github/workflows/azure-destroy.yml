@@ -37,7 +37,7 @@ jobs:
 
       - name: Setup Azure CLI
         run: |
-          curl -sL https://aka.ms/InstallAzureCLIDeb | bash
+          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
           az version
 
       - name: Login to Azure
