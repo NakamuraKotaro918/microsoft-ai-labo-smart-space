@@ -227,15 +227,15 @@ resource iotHub 'Microsoft.Devices/IotHubs@2021-07-02' = {
 //   }
 // }
 
-// App Service Plan - Consumption SKU (VMクォータを消費しない)
+// App Service Plan - Basic SKU (通常のWeb App用)
 resource appServicePlan 'Microsoft.Web/serverfarms@2021-02-01' = {
   name: 'asp-${projectName}-${environment}'
   location: location
   sku: {
-    name: 'Y1'  // Consumption SKU
-    tier: 'Dynamic'
+    name: 'B1'  // Basic SKU
+    tier: 'Basic'
   }
-  kind: 'functionapp'
+  kind: 'app'
   properties: {
     reserved: false
   }
@@ -411,7 +411,7 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10
 
 
 
-// Static Web App - VMクォータを消費しない代替案
+// Static Web App - 初期設定（リポジトリ連携は後で設定）
 resource staticWebApp 'Microsoft.Web/staticSites@2021-02-01' = {
   name: 'swa-${projectName}-${environment}'
   location: location
@@ -420,12 +420,13 @@ resource staticWebApp 'Microsoft.Web/staticSites@2021-02-01' = {
     tier: 'Free'
   }
   properties: {
-    branch: 'main'
-    buildProperties: {
-      apiLocation: '/api'
-      appLocation: '/'
-      outputLocation: '/dist'
-    }
+    // リポジトリ連携は後で手動で設定
+    // branch: 'main'
+    // buildProperties: {
+    //   apiLocation: '/api'
+    //   appLocation: '/'
+    //   outputLocation: '/dist'
+    // }
   }
   tags: tags
 }
