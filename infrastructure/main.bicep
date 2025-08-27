@@ -13,18 +13,11 @@ param location string = 'East Asia'
 @description('リソースグループ名')
 param resourceGroupName string = 'MS-Lab-Proj-RG'
 
-@description('管理者パスワード')
-@secure()
-param adminPassword string
-
 @description('Cosmos DB アカウント名')
 param cosmosAccountName string = 'cosmos-${replace(projectName, '-', '')}${environment}'
 
 @description('IoT Hub 名')
 param iotHubName string = 'iot-${replace(projectName, '-', '')}${environment}'
-
-@description('App Service Plan SKU')
-param appServicePlanSku string = 'B1'
 
 
 
@@ -318,18 +311,7 @@ resource dashboardApi 'Microsoft.Web/sites@2021-02-01' = {
           name: 'BLOB_CONTAINER_AITRIOS_IMAGES'
           value: 'aitrios-images'
         }
-        {
-          name: 'SEARCH_SERVICE_NAME'
-          value: searchService.name
-        }
-        {
-          name: 'SEARCH_SERVICE_KEY'
-          value: searchService.listAdminKeys().primaryKey
-        }
-        {
-          name: 'SEARCH_INDEX_NAME'
-          value: 'sensor-data-index'
-        }
+        // AI Search関連の設定は削除済み（初期実装では不要）
         {
           name: 'FUNCTIONS_WORKER_RUNTIME'
           value: 'python'
@@ -398,165 +380,9 @@ resource aitriosImageBlobContainer 'Microsoft.Storage/storageAccounts/blobServic
   }
 }
 
-// AI Search サービス
-resource searchService 'Microsoft.Search/searchServices@2020-08-01' = {
-  name: 'search-${replace(projectName, '-', '')}${environment}'
-  location: location
-  sku: {
-    name: 'standard'
-  }
-  properties: {
-    replicaCount: 1
-    partitionCount: 1
-    hostingMode: 'default'
-  }
-  tags: tags
-}
+// AI Search関連のコードは削除済み（初期実装では不要）
 
-// AI Search インデックス - センサーデータ
-resource sensorDataIndex 'Microsoft.Search/searchServices/indexes@2020-08-01' = {
-  parent: searchService
-  name: 'sensor-data-index'
-  properties: {
-    fields: [
-      {
-        name: 'id'
-        type: 'Edm.String'
-        key: true
-        searchable: false
-        filterable: false
-        sortable: false
-        facetable: false
-        retrievable: true
-      }
-      {
-        name: 'deviceId'
-        type: 'Edm.String'
-        searchable: true
-        filterable: true
-        sortable: true
-        facetable: true
-        retrievable: true
-      }
-      {
-        name: 'deviceType'
-        type: 'Edm.String'
-        searchable: true
-        filterable: true
-        sortable: true
-        facetable: true
-        retrievable: true
-      }
-      {
-        name: 'timestamp'
-        type: 'Edm.DateTimeOffset'
-        searchable: false
-        filterable: true
-        sortable: true
-        facetable: false
-        retrievable: true
-      }
-      {
-        name: 'temperature'
-        type: 'Edm.Double'
-        searchable: false
-        filterable: true
-        sortable: true
-        facetable: true
-        retrievable: true
-      }
-      {
-        name: 'humidity'
-        type: 'Edm.Double'
-        searchable: false
-        filterable: true
-        sortable: true
-        facetable: true
-        retrievable: true
-      }
-      {
-        name: 'co2'
-        type: 'Edm.Double'
-        searchable: false
-        filterable: true
-        sortable: true
-        facetable: true
-        retrievable: true
-      }
-      {
-        name: 'personCount'
-        type: 'Edm.Int32'
-        searchable: false
-        filterable: true
-        sortable: true
-        facetable: true
-        retrievable: true
-      }
-      {
-        name: 'content'
-        type: 'Edm.String'
-        searchable: true
-        filterable: false
-        sortable: false
-        facetable: false
-        retrievable: true
-        analyzer: 'ja.microsoft'
-      }
-    ]
-    suggesters: [
-      {
-        name: 'sg'
-        searchMode: 'analyzingInfixMatching'
-        sourceFields: ['deviceId', 'deviceType', 'content']
-      }
-    ]
-  }
-}
-
-// AI Search データソース - Cosmos DB
-resource cosmosDataSource 'Microsoft.Search/searchServices/dataSources@2020-08-01' = {
-  parent: searchService
-  name: 'cosmos-datasource'
-  properties: {
-    type: 'cosmosdb'
-    credentials: {
-      connectionString: 'AccountEndpoint=${cosmosAccount.properties.documentEndpoint};AccountKey=${cosmosAccount.listKeys().primaryMasterKey};Database=smart-space-db'
-    }
-    container: {
-      name: 'sensor-data'
-      query: 'SELECT * FROM c WHERE c.type = "sensor_data"'
-    }
-    dataChangeDetectionPolicy: {
-      '@odata.type': '#Microsoft.Azure.Search.HighWaterMarkChangeDetectionPolicy'
-      highWaterMarkColumnName: '_ts'
-    }
-    dataDeletionDetectionPolicy: {
-      '@odata.type': '#Microsoft.Azure.Search.SoftDeleteColumnDeletionDetectionPolicy'
-      softDeleteColumnName: 'isDeleted'
-      softDeleteMarkerValue: 'true'
-    }
-  }
-}
-
-// AI Search インデクサー
-resource searchIndexer 'Microsoft.Search/searchServices/indexers@2020-08-01' = {
-  parent: searchService
-  name: 'sensor-data-indexer'
-  properties: {
-    dataSourceName: cosmosDataSource.name
-    targetIndexName: sensorDataIndex.name
-    schedule: {
-      interval: 'PT1H'
-    }
-    parameters: {
-      configuration: {
-        queryTimeout: '00:05:00'
-        maxFailedItems: 10
-        maxFailedItemsPerBatch: 5
-      }
-    }
-  }
-}
+// AI Search関連のリソースは削除済み（初期実装では不要）
 
 // Application Insights
 resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
@@ -653,8 +479,5 @@ output staticWebAppUrl string = staticWebApp.properties.defaultHostname
 output keyVaultName string = keyVault.name
 output appInsightsKey string = appInsights.properties.InstrumentationKey
 output storageAccountName string = storageAccount.name
-output searchServiceName string = searchService.name
-output searchServiceUrl string = 'https://${searchService.name}.search.windows.net'
-output blobContainerSensor string = sensorDataBlobContainer.name
-output blobContainerAnalysis string = analysisDataBlobContainer.name
-output blobContainerImage string = imageDataBlobContainer.name
+// AI Search関連のoutputsは削除済み（初期実装では不要）
+output blobContainerAitriosImages string = aitriosImageBlobContainer.name
