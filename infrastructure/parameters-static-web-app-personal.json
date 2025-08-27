@@ -11,8 +11,8 @@
     "location": {
       "value": "East Asia"
     },
-    "resourceGroupName": {
-      "value": "MSLab-test"
+    "repositoryUrl": {
+      "value": "https://github.com/your-username/your-repo"
     }
   }
 }

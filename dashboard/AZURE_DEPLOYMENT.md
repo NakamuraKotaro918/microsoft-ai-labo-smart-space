@@ -104,7 +104,7 @@ WEBSITE_NODE_DEFAULT_VERSION=18
 
 1. **ファイル圧縮**: Azure Static Web Appsは自動的にgzip圧縮を提供
 2. **キャッシュ設定**: `staticwebapp.config.json`でキャッシュヘッダーを設定
-3. **CDN**: Azure CDNを有効化してグローバル配信を改善
+3. **配信最適化**: Azure Static Web Appsの内蔵CDN機能を活用
 
 ## 監視とログ
 

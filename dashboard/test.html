@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,6 +17,7 @@
             align-items: center;
             justify-content: center;
         }
+
         .container {
             text-align: center;
             background: rgba(255, 255, 255, 0.1);
@@ -25,10 +27,12 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             max-width: 600px;
         }
+
         h1 {
             margin-bottom: 20px;
             font-size: 2.5em;
         }
+
         .status {
             background: rgba(76, 175, 80, 0.2);
             padding: 15px;
@@ -36,6 +40,7 @@
             margin: 20px 0;
             border: 1px solid rgba(76, 175, 80, 0.3);
         }
+
         .info {
             background: rgba(33, 150, 243, 0.2);
             padding: 15px;
@@ -43,6 +48,7 @@
             margin: 20px 0;
             border: 1px solid rgba(33, 150, 243, 0.3);
         }
+
         .button {
             display: inline-block;
             background: rgba(255, 255, 255, 0.2);
@@ -53,10 +59,12 @@
             margin: 10px;
             transition: all 0.3s ease;
         }
+
         .button:hover {
             background: rgba(255, 255, 255, 0.3);
             transform: translateY(-2px);
         }
+
         .timestamp {
             font-size: 0.9em;
             opacity: 0.8;
@@ -64,6 +72,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <h1>🚀 Azure Static Web Apps</h1>
@@ -71,20 +80,20 @@
             <h2>✅ デプロイ成功</h2>
             <p>Microsoft AI Labo スマート空間最適化ダッシュボードが正常にデプロイされました！</p>
         </div>
-        
+
         <div class="info">
             <h3>📋 デプロイ情報</h3>
             <p><strong>プラットフォーム:</strong> Azure Static Web Apps</p>
             <p><strong>ホスティング:</strong> 静的ファイルホスティング</p>
-            <p><strong>CDN:</strong> Azure CDN</p>
+            <p><strong>配信:</strong> Azure Static Web Apps</p>
             <p><strong>SSL:</strong> 自動証明書</p>
         </div>
-        
+
         <div>
             <a href="/" class="button">🏠 メインダッシュボード</a>
             <a href="/AZURE_DEPLOYMENT.md" class="button">📚 デプロイガイド</a>
         </div>
-        
+
         <div class="timestamp">
             <p>デプロイ時刻: <span id="deploy-time"></span></p>
             <p>ページ読み込み時刻: <span id="load-time"></span></p>
@@ -95,11 +104,11 @@
         // 現在時刻を表示
         document.getElementById('deploy-time').textContent = new Date().toLocaleString('ja-JP');
         document.getElementById('load-time').textContent = new Date().toLocaleString('ja-JP');
-        
+
         // ページ読み込み完了時の処理
-        window.addEventListener('load', function() {
+        window.addEventListener('load', function () {
             console.log('✅ Azure Static Web Apps テストページが正常に読み込まれました');
-            
+
             // パフォーマンス情報をログに出力
             if (window.performance && window.performance.timing) {
                 const loadTime = window.performance.timing.loadEventEnd - window.performance.timing.navigationStart;
@@ -108,4 +117,5 @@
         });
     </script>
 </body>
+
 </html>

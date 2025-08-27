@@ -5,7 +5,7 @@ from datetime import datetime
 import uuid
 
 
-def main(req: func.HttpRequest, outputEventHubMessage: func.Out[str], outputDocument: func.Out[func.Document]) -> func.HttpResponse:
+def main(req: func.HttpRequest, outputDocument: func.Out[func.Document]) -> func.HttpResponse:
   logging.info('Python HTTP trigger function processed a request.')
 
   try:
@@ -18,20 +18,11 @@ def main(req: func.HttpRequest, outputEventHubMessage: func.Out[str], outputDocu
     # データの正規化
     normalized_data = normalize_data(source, req_body)
 
-    # Event Hubに送信
-    event_hub_message = {
+    # Cosmos DBに保存
+    document = {
         "id": str(uuid.uuid4()),
         "source": source,
         "timestamp": datetime.utcnow().isoformat(),
-        "data": normalized_data
-    }
-    outputEventHubMessage.set(json.dumps(event_hub_message))
-
-    # Cosmos DBに保存
-    document = {
-        "id": event_hub_message["id"],
-        "source": source,
-        "timestamp": event_hub_message["timestamp"],
         "data": normalized_data,
         "deviceId": normalized_data.get("deviceId", "unknown"),
         "type": "sensor_data"

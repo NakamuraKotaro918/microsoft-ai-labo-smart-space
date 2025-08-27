@@ -26,11 +26,7 @@ param iotHubName string = 'iot-${replace(projectName, '-', '')}${environment}'
 @description('App Service Plan SKU')
 param appServicePlanSku string = 'B1'
 
-@description('PostgreSQL サーバー名')
-param postgresqlServerName string = 'psql-${replace(projectName, '-', '')}${environment}'
 
-@description('PostgreSQL 管理者ユーザー名')
-param postgresqlAdminUsername string = 'admin'
 
 @description('Storage Account 名')
 param storageAccountName string = 'st${replace(projectName, '-', '')}${environment}'
@@ -138,6 +134,66 @@ resource analysisDataContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabas
   }
 }
 
+// Cosmos DB コンテナ - 来場者データ
+resource visitorDataContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2021-10-15' = {
+  parent: cosmosDatabase
+  name: 'visitor-data'
+  properties: {
+    resource: {
+      id: 'visitor-data'
+      partitionKey: {
+        paths: [
+          '/partitionKey'
+        ]
+        kind: 'Hash'
+      }
+      indexingPolicy: {
+        indexingMode: 'consistent'
+        includedPaths: [
+          {
+            path: '/*'
+          }
+        ]
+        excludedPaths: [
+          {
+            path: '/"_etag"/?'
+          }
+        ]
+      }
+    }
+  }
+}
+
+// Cosmos DB コンテナ - システムログ
+resource systemLogsContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2021-10-15' = {
+  parent: cosmosDatabase
+  name: 'system-logs'
+  properties: {
+    resource: {
+      id: 'system-logs'
+      partitionKey: {
+        paths: [
+          '/partitionKey'
+        ]
+        kind: 'Hash'
+      }
+      indexingPolicy: {
+        indexingMode: 'consistent'
+        includedPaths: [
+          {
+            path: '/*'
+          }
+        ]
+        excludedPaths: [
+          {
+            path: '/"_etag"/?'
+          }
+        ]
+      }
+    }
+  }
+}
+
 // Azure IoT Hub
 resource iotHub 'Microsoft.Devices/IotHubs@2021-07-02' = {
   name: iotHubName
@@ -200,7 +256,7 @@ resource dashboardApi 'Microsoft.Web/sites@2021-02-01' = {
   properties: {
     serverFarmId: appServicePlan.id
     siteConfig: {
-      linuxFxVersion: 'PYTHON|3.9'
+              linuxFxVersion: 'PYTHON|3.11'
       appSettings: [
         {
           name: 'COSMOS_ENDPOINT'
@@ -221,6 +277,14 @@ resource dashboardApi 'Microsoft.Web/sites@2021-02-01' = {
         {
           name: 'COSMOS_CONTAINER_ANALYSIS'
           value: 'analysis-data'
+        }
+        {
+          name: 'COSMOS_CONTAINER_VISITOR'
+          value: 'visitor-data'
+        }
+        {
+          name: 'COSMOS_CONTAINER_SYSTEM_LOGS'
+          value: 'system-logs'
         }
         {
           name: 'IOT_HUB_HOST'
@@ -251,16 +315,8 @@ resource dashboardApi 'Microsoft.Web/sites@2021-02-01' = {
           value: storageAccount.listKeys().keys[0].value
         }
         {
-          name: 'BLOB_CONTAINER_SENSOR'
-          value: 'sensor-data'
-        }
-        {
-          name: 'BLOB_CONTAINER_ANALYSIS'
-          value: 'analysis-data'
-        }
-        {
-          name: 'BLOB_CONTAINER_IMAGE'
-          value: 'image-data'
+          name: 'BLOB_CONTAINER_AITRIOS_IMAGES'
+          value: 'aitrios-images'
         }
         {
           name: 'SEARCH_SERVICE_NAME'
@@ -288,44 +344,7 @@ resource dashboardApi 'Microsoft.Web/sites@2021-02-01' = {
   tags: tags
 }
 
-// Azure Database for PostgreSQL Flexible Server (VMクォータを消費しない)
-resource postgresqlServer 'Microsoft.DBforPostgreSQL/flexibleServers@2021-06-01' = {
-  name: postgresqlServerName
-  location: location
-  sku: {
-    name: 'Standard_B1ms'
-    tier: 'Burstable'
-  }
-  properties: {
-    administratorLogin: postgresqlAdminUsername
-    administratorLoginPassword: adminPassword
-    version: '14'
-    storage: {
-      storageSizeGB: 32
-    }
-    backup: {
-      backupRetentionDays: 7
-      geoRedundantBackup: 'Disabled'
-    }
-    highAvailability: {
-      mode: 'Disabled'
-    }
-    maintenanceWindow: {
-      customWindow: 'Disabled'
-    }
-  }
-  tags: tags
-}
 
-// PostgreSQL データベース
-resource postgresqlDatabase 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2021-06-01' = {
-  parent: postgresqlServer
-  name: 'smart_space_db'
-  properties: {
-    charset: 'utf8'
-    collation: 'utf8_general_ci'
-  }
-}
 
 // Storage Account
 resource storageAccount 'Microsoft.Storage/storageAccounts@2021-09-01' = {
@@ -362,41 +381,19 @@ resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2021-09-01'
   }
 }
 
-// Blob Container - センサーデータ
-resource sensorDataBlobContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2021-09-01' = {
-  parent: blobService
-  name: 'sensor-data'
-  properties: {
-    publicAccess: 'None'
-    metadata: {
-      type: 'sensor-data'
-      description: 'センサーデータのBlobストレージ'
-    }
-  }
-}
 
-// Blob Container - 分析データ
-resource analysisDataBlobContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2021-09-01' = {
-  parent: blobService
-  name: 'analysis-data'
-  properties: {
-    publicAccess: 'None'
-    metadata: {
-      type: 'analysis-data'
-      description: '分析データのBlobストレージ'
-    }
-  }
-}
 
-// Blob Container - 画像データ
-resource imageDataBlobContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2021-09-01' = {
+
+
+// Blob Container - AITRIOS画像データ
+resource aitriosImageBlobContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2021-09-01' = {
   parent: blobService
-  name: 'image-data'
+  name: 'aitrios-images'
   properties: {
     publicAccess: 'None'
     metadata: {
-      type: 'image-data'
-      description: 'AITRIOS画像データのBlobストレージ'
+      type: 'aitrios-images'
+      description: 'AITRIOS人物検知画像のBlobストレージ'
     }
   }
 }
@@ -586,35 +583,7 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10
   tags: tags
 }
 
-// CDN Profile
-resource cdnProfile 'Microsoft.Cdn/profiles@2021-06-01' = {
-  name: 'cdn-${projectName}-${environment}'
-  location: 'global'
-  sku: {
-    name: 'Standard_Microsoft'
-  }
-  tags: tags
-}
 
-// CDN Endpoint
-resource cdnEndpoint 'Microsoft.Cdn/profiles/endpoints@2021-06-01' = {
-  parent: cdnProfile
-  name: 'endpoint-${projectName}-${environment}'
-  location: 'global'
-  properties: {
-    originHostHeader: dashboardApi.properties.defaultHostName
-    origins: [
-      {
-        name: 'api-origin'
-        properties: {
-          hostName: dashboardApi.properties.defaultHostName
-          httpPort: 80
-          httpsPort: 443
-        }
-      }
-    ]
-  }
-}
 
 // Static Web App - VMクォータを消費しない代替案
 resource staticWebApp 'Microsoft.Web/staticSites@2021-02-01' = {
@@ -679,7 +648,7 @@ output cosmosEndpoint string = cosmosAccount.properties.documentEndpoint
 output iotHubName string = iotHub.name
 output iotHubHostName string = '${iotHub.name}.azure-devices.net'
 output dashboardApiUrl string = dashboardApi.properties.defaultHostName
-output cdnEndpointUrl string = cdnEndpoint.properties.hostName
+
 output staticWebAppUrl string = staticWebApp.properties.defaultHostname
 output keyVaultName string = keyVault.name
 output appInsightsKey string = appInsights.properties.InstrumentationKey

@@ -126,7 +126,7 @@ az webapp create \
   --name smart-space-dashboard \
   --resource-group smart-space-dashboard-rg \
   --plan smart-space-dashboard-plan \
-  --runtime "PYTHON|3.9"
+  --runtime "PYTHON|3.11"
 ```
 
 ### 2.5 アプリケーション設定
@@ -136,7 +136,7 @@ az webapp config appsettings set \
   --name smart-space-dashboard \
   --settings \
     SCM_DO_BUILD_DURING_DEPLOYMENT=true \
-    PYTHON_VERSION=3.9
+    PYTHON_VERSION=3.11
 ```
 
 ### 2.6 デプロイ

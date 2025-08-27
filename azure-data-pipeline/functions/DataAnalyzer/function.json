@@ -6,15 +6,15 @@
       "direction": "in",
       "name": "req",
       "methods": [
-        "post"
+        "get"
       ],
-      "route": "collect/{source}"
+      "route": "analyze"
     },
     {
       "type": "cosmosDB",
       "name": "outputDocument",
       "databaseName": "smart-space-db",
-      "collectionName": "sensor-data",
+      "collectionName": "analysis-data",
       "createIfNotExists": true,
       "connectionStringSetting": "CosmosDBConnectionString",
       "direction": "out"

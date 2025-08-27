@@ -8,13 +8,13 @@
       "methods": [
         "post"
       ],
-      "route": "collect/{source}"
+      "route": "process-image"
     },
     {
       "type": "cosmosDB",
       "name": "outputDocument",
       "databaseName": "smart-space-db",
-      "collectionName": "sensor-data",
+      "collectionName": "image-data",
       "createIfNotExists": true,
       "connectionStringSetting": "CosmosDBConnectionString",
       "direction": "out"

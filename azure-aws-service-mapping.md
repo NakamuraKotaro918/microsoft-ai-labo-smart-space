@@ -418,7 +418,7 @@ aws elasticbeanstalk create-application --application-name smart-dashboard
 aws elasticbeanstalk create-environment \
   --application-name smart-dashboard \
   --environment-name smart-dashboard-prod \
-  --solution-stack-name "64bit Amazon Linux 2 v3.5.1 running Python 3.9"
+  --solution-stack-name "64bit Amazon Linux 2 v3.5.1 running Python 3.11"
 ```
 
 ### 1.2 Azure Container Instances vs AWS Fargate
@@ -558,7 +558,7 @@ def lambda_handler(event, context):
 # Lambda関数のデプロイ
 aws lambda create-function \
   --function-name smart-dashboard-api \
-  --runtime python3.9 \
+  --runtime python3.11 \
   --role arn:aws:iam::<account>:role/lambda-execution-role \
   --handler lambda_function.lambda_handler \
   --zip-file fileb://function.zip
