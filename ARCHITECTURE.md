@@ -2,7 +2,7 @@
 
 ## システム概要
 
-SONY AITRIOS、Google Gemini API、快適君からリアルタイムデータを収集し、Azureクラウド上で処理・分析して、ダッシュボードで可視化するスマート空間最適化システムです。
+SONY AITRIOS、快適君からリアルタイムデータを収集し、Azureクラウド上で処理・分析して、ダッシュボードで可視化するスマート空間最適化システムです。AITRIOSへの人物検出確認APIを定期的に実行し、人物を検出した際に画像データやメタデータを取得します。
 
 ## 最新アーキテクチャ図
 
@@ -10,7 +10,6 @@ SONY AITRIOS、Google Gemini API、快適君からリアルタイムデータを
 graph TB
     %% 外部データソース
     subgraph "外部データソース"
-        GEMINI[Google Gemini API<br/>行動・感情分析]
         AITRIOS[SONY AITRIOS<br/>人物検知・分析]
         KAITEKI[快適君<br/>環境センサー]
     end
@@ -61,7 +60,7 @@ graph TB
     end
 
     %% データフロー
-    GEMINI -->|"HTTPS REST API<br/>行動分析データ<br/>JSON形式"| FUNCTIONS
+    FUNCTIONS -->|"HTTP/HTTPS<br/>人物検出確認API<br/>定期的なポーリング"| AITRIOS
     AITRIOS -->|"HTTP/HTTPS<br/>人物検知メタデータ<br/>年齢・性別・人数"| FUNCTIONS
     AITRIOS -->|"HTTP/HTTPS<br/>画像データ<br/>JPG/PNG形式"| FUNCTIONS
     KAITEKI -->|"MQTT(S) over TLS<br/>環境センサーデータ<br/>温湿度・CO2・照度"| IOTHUB
@@ -92,7 +91,7 @@ graph TB
     classDef monitoring fill:#68217a,stroke:#333,stroke-width:2px,color:#fff
     classDef iot fill:#ff6b35,stroke:#333,stroke-width:2px,color:#fff
 
-    class GEMINI,AITRIOS,KAITEKI external
+    class AITRIOS,KAITEKI external
     class FUNCTIONS,API,STATIC azure
     class COSMOS,BLOB,USERS,SYSTEM_LOGS,SENSOR,ANALYSIS,USERS,SYSTEM_LOGS,AITRIOS_IMAGES azure
     class INSIGHTS,KEYVAULT monitoring
@@ -110,12 +109,13 @@ graph TB
 - **処理頻度**: 人物検知時（リアルタイム）
 - **データサイズ**: 数KB（メタデータ）
 
-#### **Google Gemini API（行動・感情分析）**
-- **機能**: 人物の行動パターン・感情状態の分析
-- **出力データ**: 行動分析結果、感情スコア、特徴量
-- **通信方式**: HTTPS REST API
-- **処理頻度**: 画像・動画分析時
-- **データサイズ**: 数KB（分析結果）
+#### **AITRIOS人物検出確認API**
+- **機能**: 定期的な人物検出確認とデータ取得
+- **実行方式**: Azure Functionsからの定期的なポーリング
+- **確認頻度**: 1-5分間隔（設定可能）
+- **取得データ**: 人物検知メタデータ、画像データ
+- **通信方式**: HTTP/HTTPS REST API
+- **データサイズ**: 数KB（メタデータ）+ 画像ファイル
 
 #### **快適君（環境センサー）**
 - **機能**: 温湿度、CO2濃度、照明状態の監視
@@ -138,10 +138,11 @@ graph TB
 #### **データ収集・正規化・分析**
 - **機能**: サーバーレスデータ処理
 - **処理内容**:
+  - AITRIOSへの定期的な人物検出確認API実行
   - データ形式の統一（JSON正規化）
   - データ検証・異常値検出
   - 時系列データの集計・分析
-  - 画像データの前処理
+  - 画像データの前処理・保存
 - **実行環境**: Python 3.11
 - **スケーリング**: 自動スケール（従量課金）
 - **料金**: 100万実行/月まで無料
@@ -244,7 +245,7 @@ graph TB
 ```json
 {
   "id": "uuid",
-  "source": "aitrios|gemini|kaiteki",
+  "source": "aitrios|kaiteki",
   "timestamp": "2024-01-01T12:00:00Z",
   "deviceId": "device-001",
   "deviceType": "aitrios",
