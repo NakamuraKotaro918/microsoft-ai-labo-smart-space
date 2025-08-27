@@ -2,26 +2,8 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "projectName": {
-      "value": "mass-smart-space"
-    },
-    "environment": {
-      "value": "dev"
-    },
     "location": {
       "value": "Japan East"
-    },
-    "resourceGroupName": {
-      "value": "MS-Lab-Proj-RG"
-    },
-    "cosmosAccountName": {
-      "value": "cosmosmasssmartspacedev"
-    },
-    "iotHubName": {
-      "value": "iotmasssmartspacedev"
-    },
-    "storageAccountName": {
-      "value": "stmasssmartspacedev"
     }
   }
 }
