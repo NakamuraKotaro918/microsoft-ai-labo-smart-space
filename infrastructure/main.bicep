@@ -2,7 +2,7 @@
 // Microsoft AI Labo スマート空間最適化ダッシュボード
 
 @description('プロジェクト名')
-param projectName string = 'mass-smart-space'
+param projectName string = 'mslab-smart-space'
 
 @description('環境名')
 param environment string = 'dev'
