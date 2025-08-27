@@ -21,6 +21,7 @@ on:
 env:
   PROJECT_NAME: mass-smart-space
   LOCATION: japaneast
+  RESOURCE_GROUP: MS-Lab-Proj-RG
 
 jobs:
   deploy:
@@ -48,22 +49,48 @@ jobs:
         else
           echo "ENVIRONMENT=dev" >> $GITHUB_ENV
         fi
-        echo "RESOURCE_GROUP=rg-${{ env.PROJECT_NAME }}-${{ env.ENVIRONMENT }}" >> $GITHUB_ENV
 
-    - name: Create Resource Group
+    - name: Verify Resource Group exists
       run: |
-        az group create \
-          --name ${{ env.RESOURCE_GROUP }} \
-          --location ${{ env.LOCATION }}
+        echo "Checking if resource group ${{ env.RESOURCE_GROUP }} exists..."
+        if ! az group show --name ${{ env.RESOURCE_GROUP }} --query name --output tsv; then
+          echo "Creating resource group ${{ env.RESOURCE_GROUP }}..."
+          az group create \
+            --name ${{ env.RESOURCE_GROUP }} \
+            --location ${{ env.LOCATION }}
+        else
+          echo "Resource group ${{ env.RESOURCE_GROUP }} already exists."
+        fi
+
+    - name: Check parameters file
+      id: check-params
+      run: |
+        cd infrastructure
+        if [ -f "parameters.${{ env.ENVIRONMENT }}.json" ]; then
+          echo "PARAMS_FILE=parameters.${{ env.ENVIRONMENT }}.json" >> $GITHUB_ENV
+          echo "Using parameters file: parameters.${{ env.ENVIRONMENT }}.json"
+        else
+          echo "PARAMS_FILE=" >> $GITHUB_ENV
+          echo "No parameters file found, using default values"
+        fi
 
     - name: Deploy Infrastructure
       run: |
         cd infrastructure
-        az deployment group create \
-          --resource-group ${{ env.RESOURCE_GROUP }} \
-          --template-file main.bicep \
-          --parameters parameters.${{ env.ENVIRONMENT }}.json \
-          --name "auto-deployment-$(date +%Y%m%d-%H%M%S)"
+        if [ -n "${{ env.PARAMS_FILE }}" ]; then
+          echo "Deploying with parameters file: ${{ env.PARAMS_FILE }}"
+          az deployment group create \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --template-file main.bicep \
+            --parameters ${{ env.PARAMS_FILE }} \
+            --name "auto-deployment-$(date +%Y%m%d-%H%M%S)"
+        else
+          echo "Deploying with default parameters"
+          az deployment group create \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --template-file main.bicep \
+            --name "auto-deployment-$(date +%Y%m%d-%H%M%S)"
+        fi
 
     - name: Deploy API
       run: |
@@ -81,3 +108,4 @@ jobs:
         echo "Environment: ${{ env.ENVIRONMENT }}"
         echo "Location: ${{ env.LOCATION }}"
         echo "Trigger: ${{ github.event_name }}"
+        echo "Parameters File: ${{ env.PARAMS_FILE }}"
