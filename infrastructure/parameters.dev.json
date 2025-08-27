@@ -9,28 +9,16 @@
       "value": "dev"
     },
     "location": {
-      "value": "Japan East"
+      "value": "East Asia"
     },
     "resourceGroupName": {
       "value": "MS-Lab-Proj-RG"
-    },
-    "adminPassword": {
-      "value": "P@ssw0rd123!"
     },
     "cosmosAccountName": {
       "value": "cosmosmasssmartspacedev"
     },
     "iotHubName": {
       "value": "iotmasssmartspacedev"
-    },
-    "appServicePlanSku": {
-      "value": "B1"
-    },
-    "postgresqlServerName": {
-      "value": "psqlmasssmartspacedev"
-    },
-    "postgresqlAdminUsername": {
-      "value": "admin"
     },
     "storageAccountName": {
       "value": "stmasssmartspacedev"
