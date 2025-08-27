@@ -1,0 +1,128 @@
+name: Destroy Azure Resources
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: '削除する環境'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - prod
+      resource_group:
+        description: 'リソースグループ名（カスタム指定時）'
+        required: false
+        type: string
+      confirm_destroy:
+        description: '削除の確認（yes と入力してください）'
+        required: true
+        type: string
+        default: 'no'
+
+env:
+  PROJECT_NAME: mass-smart-space
+  LOCATION: japaneast
+
+jobs:
+  destroy:
+    name: Destroy Azure Resources
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Azure CLI
+        run: |
+          curl -sL https://aka.ms/InstallAzureCLIDeb | bash
+          az version
+
+      - name: Login to Azure
+        run: |
+          az login --service-principal \
+            --username "${{ secrets.AZURE_CLIENT_ID }}" \
+            --password "${{ secrets.AZURE_CLIENT_SECRET }}" \
+            --tenant "${{ secrets.AZURE_TENANT_ID }}"
+
+      - name: Set resource group
+        id: set-rg
+        run: |
+          if [ -n "${{ github.event.inputs.resource_group }}" ]; then
+            echo "RESOURCE_GROUP=${{ github.event.inputs.resource_group }}" >> $GITHUB_ENV
+          else
+            echo "RESOURCE_GROUP=rg-${{ env.PROJECT_NAME }}-${{ github.event.inputs.environment }}" >> $GITHUB_ENV
+          fi
+          echo "Using Resource Group: ${{ env.RESOURCE_GROUP }}"
+
+      - name: Verify resource group exists
+        run: |
+          if ! az group show --name ${{ env.RESOURCE_GROUP }} >/dev/null 2>&1; then
+            echo "❌ Resource group '${{ env.RESOURCE_GROUP }}' does not exist"
+            exit 1
+          fi
+          echo "✅ Resource group '${{ env.RESOURCE_GROUP }}' found"
+
+      - name: List resources before deletion
+        run: |
+          echo "=== Resources to be deleted ==="
+          echo "Resource Group: ${{ env.RESOURCE_GROUP }}"
+          echo "Environment: ${{ github.event.inputs.environment }}"
+          echo ""
+          az resource list --resource-group ${{ env.RESOURCE_GROUP }} --query "[].{name:name, type:type, location:location, provisioningState:provisioningState}" -o table
+
+      - name: Show resource count and cost warning
+        run: |
+          RESOURCE_COUNT=$(az resource list --resource-group ${{ env.RESOURCE_GROUP }} --query 'length(@)' -o tsv)
+          echo "⚠️  WARNING: This will delete ALL resources in resource group: ${{ env.RESOURCE_GROUP }}"
+          echo "📊 Resource count: $RESOURCE_COUNT"
+          echo "💰 This action will stop all billing for these resources"
+          echo "❌ Deletion cannot be undone!"
+          echo ""
+          echo "Confirmation: ${{ github.event.inputs.confirm_destroy }}"
+          if [ "${{ github.event.inputs.confirm_destroy }}" != "yes" ]; then
+            echo "❌ Confirmation failed. Please type 'yes' to proceed."
+            exit 1
+          fi
+          echo "✅ Confirmation successful. Proceeding with deletion..."
+
+      - name: Delete resource group
+        run: |
+          echo "🗑️  Starting resource group deletion..."
+          az group delete \
+            --name ${{ env.RESOURCE_GROUP }} \
+            --yes \
+            --no-wait
+          echo "Deletion initiated. Waiting for completion..."
+
+      - name: Wait for deletion
+        run: |
+          echo "⏳ Waiting for resource group deletion to complete..."
+          while az group show --name ${{ env.RESOURCE_GROUP }} 2>/dev/null; do
+            echo "Still deleting... waiting 30 seconds"
+            sleep 30
+          done
+          echo "✅ Resource group deletion completed"
+
+      - name: Verify deletion
+        run: |
+          if az group show --name ${{ env.RESOURCE_GROUP }} 2>/dev/null; then
+            echo "❌ Resource group still exists"
+            exit 1
+          else
+            echo "✅ Resource group successfully deleted"
+          fi
+
+      - name: Deletion summary
+        run: |
+          echo "=== Destruction Summary ==="
+          echo "Resource Group: ${{ env.RESOURCE_GROUP }}"
+          echo "Environment: ${{ github.event.inputs.environment }}"
+          echo "Status: Successfully deleted"
+          echo "Timestamp: $(date -u)"
+          echo "GitHub Run ID: ${{ github.run_id }}"
+          echo ""
+          echo "🎉 All resources have been removed from Azure"
+          echo "💡 Remember to clean up any local references or documentation"
