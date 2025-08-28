@@ -227,7 +227,7 @@ resource iotHub 'Microsoft.Devices/IotHubs@2021-07-02' = {
 //   }
 // }
 
-// App Service Plan - Basic SKU (通常のWeb App用)
+// App Service Plan - Basic SKU (Linux用)
 resource appServicePlan 'Microsoft.Web/serverfarms@2021-02-01' = {
   name: 'asp-${projectName}-${environment}'
   location: location
@@ -235,21 +235,23 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2021-02-01' = {
     name: 'B1'  // Basic SKU
     tier: 'Basic'
   }
-  kind: 'app'
+  kind: 'linux'
   properties: {
-    reserved: false
+    reserved: true
   }
   tags: tags
 }
 
-// App Service - Dashboard API (Function Appとして)
+// App Service - Dashboard API (Linux用)
 resource dashboardApi 'Microsoft.Web/sites@2021-02-01' = {
   name: 'api-${projectName}-${environment}'
   location: location
+  kind: 'app,linux'
   properties: {
     serverFarmId: appServicePlan.id
     siteConfig: {
-              linuxFxVersion: 'PYTHON|3.11'
+      linuxFxVersion: 'PYTHON|3.11'
+      alwaysOn: true
       appSettings: [
         {
           name: 'COSMOS_ENDPOINT'
