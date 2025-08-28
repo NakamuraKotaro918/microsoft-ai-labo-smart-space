@@ -83,53 +83,70 @@ jobs:
       - name: Show resource count and cost warning
         run: |
           RESOURCE_COUNT=$(az resource list --resource-group ${{ env.RESOURCE_GROUP }} --query 'length(@)' -o tsv)
-          echo "⚠️  WARNING: This will delete ALL resources in resource group: ${{ env.RESOURCE_GROUP }}"
-          echo "📊 Resource count: $RESOURCE_COUNT"
-          echo "💰 This action will stop all billing for these resources"
-          echo "❌ Deletion cannot be undone!"
+          echo "⚠️  WARNING: This will delete ONLY the resources deployed by azure-deploy in resource group: ${{ env.RESOURCE_GROUP }}"
+          echo "📊 Total resource count in resource group: $RESOURCE_COUNT"
+          echo "💰 This action will stop billing for the deployed resources only"
+          echo "✅ Resource group and other resources will remain intact"
+          echo "❌ Deletion of deployed resources cannot be undone!"
           echo ""
           echo "Confirmation: ${{ github.event.inputs.confirm_destroy }}"
           if [ "${{ github.event.inputs.confirm_destroy }}" != "yes" ]; then
             echo "❌ Confirmation failed. Please type 'yes' to proceed."
             exit 1
           fi
-          echo "✅ Confirmation successful. Proceeding with deletion..."
+          echo "✅ Confirmation successful. Proceeding with specific resource deletion..."
 
-      - name: Delete resource group
+      - name: Delete specific resources only
         run: |
-          echo "🗑️  Starting resource group deletion..."
-          az group delete \
-            --name ${{ env.RESOURCE_GROUP }} \
-            --yes \
-            --no-wait
-          echo "Deletion initiated. Waiting for completion..."
-
-      - name: Wait for deletion
-        run: |
-          echo "⏳ Waiting for resource group deletion to complete..."
-          while az group show --name ${{ env.RESOURCE_GROUP }} 2>/dev/null; do
-            echo "Still deleting... waiting 30 seconds"
-            sleep 30
-          done
-          echo "✅ Resource group deletion completed"
-
-      - name: Verify deletion
-        run: |
-          if az group show --name ${{ env.RESOURCE_GROUP }} 2>/dev/null; then
-            echo "❌ Resource group still exists"
-            exit 1
-          else
-            echo "✅ Resource group successfully deleted"
-          fi
+          echo "🗑️  Deleting only specific resources deployed by azure-deploy..."
+          
+          # App Serviceを削除
+          echo "Deleting App Service..."
+          az webapp delete --name "api-${{ env.PROJECT_NAME }}-${{ env.ENVIRONMENT }}" --resource-group ${{ env.RESOURCE_GROUP }} || echo "App Service not found or already deleted"
+          
+          # App Service Planを削除
+          echo "Deleting App Service Plan..."
+          az appservice plan delete --name "asp-${{ env.PROJECT_NAME }}-${{ env.ENVIRONMENT }}" --resource-group ${{ env.RESOURCE_GROUP }} --yes || echo "App Service Plan not found or already deleted"
+          
+          # Cosmos DBを削除
+          echo "Deleting Cosmos DB..."
+          COSMOS_NAME="cosmos-${PROJECT_NAME//-/}${ENVIRONMENT}"
+          az cosmosdb delete --name "$COSMOS_NAME" --resource-group ${{ env.RESOURCE_GROUP }} --yes || echo "Cosmos DB not found or already deleted"
+          
+          # IoT Hubを削除
+          echo "Deleting IoT Hub..."
+          IOT_NAME="iot-${PROJECT_NAME//-/}${ENVIRONMENT}"
+          az iot hub delete --name "$IOT_NAME" --resource-group ${{ env.RESOURCE_GROUP }} || echo "IoT Hub not found or already deleted"
+          
+          # Storage Accountを削除
+          echo "Deleting Storage Account..."
+          STORAGE_NAME="st${PROJECT_NAME//-/}${ENVIRONMENT}"
+          az storage account delete --name "$STORAGE_NAME" --resource-group ${{ env.RESOURCE_GROUP }} --yes || echo "Storage Account not found or already deleted"
+          
+          # Key Vaultを削除
+          echo "Deleting Key Vault..."
+          KV_NAME="kv-${PROJECT_NAME//-/}${ENVIRONMENT}"
+          az keyvault delete --name "$KV_NAME" --resource-group ${{ env.RESOURCE_GROUP }} || echo "Key Vault not found or already deleted"
+          
+          # Application Insightsを削除
+          echo "Deleting Application Insights..."
+          az monitor app-insights component delete --app "ai-${{ env.PROJECT_NAME }}-${{ env.ENVIRONMENT }}" --resource-group ${{ env.RESOURCE_GROUP }} --yes || echo "Application Insights not found or already deleted"
+          
+          # Static Web Appを削除
+          echo "Deleting Static Web App..."
+          az staticwebapp delete --name "swa-${{ env.PROJECT_NAME }}-${{ env.ENVIRONMENT }}" --resource-group ${{ env.RESOURCE_GROUP }} --yes || echo "Static Web App not found or already deleted"
+          
+          echo "✅ Specific resource deletion completed"
 
       - name: Deletion summary
         run: |
           echo "=== Destruction Summary ==="
           echo "Resource Group: ${{ env.RESOURCE_GROUP }}"
           echo "Environment: ${{ github.event.inputs.environment }}"
-          echo "Status: Successfully deleted"
+          echo "Status: Specific resources successfully deleted"
           echo "Timestamp: $(date -u)"
           echo "GitHub Run ID: ${{ github.run_id }}"
           echo ""
-          echo "🎉 All resources have been removed from Azure"
+          echo "🎉 Deployed resources have been removed from Azure"
+          echo "✅ Resource group remains intact"
           echo "💡 Remember to clean up any local references or documentation"
