@@ -81,8 +81,9 @@ AZURE_CREDENTIALS        # Azure サービスプリンシパル認証情報
 ```
 
 ### **環境設定**
-- **dev**: 開発環境（`rg-mass-smart-space-dev`）
-- **prod**: 本番環境（`rg-mass-smart-space-prod`）
+- **dev**: 開発環境（`MS-Lab-Proj-RG`）
+- **prod**: 本番環境（`MS-Lab-Proj-RG`）
+- **test**: テスト環境（`MSLab-test`）
 
 ## 📊 ワークフロー比較
 

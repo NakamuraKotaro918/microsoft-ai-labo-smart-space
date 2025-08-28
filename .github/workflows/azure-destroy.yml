@@ -53,7 +53,14 @@ jobs:
           if [ -n "${{ github.event.inputs.resource_group }}" ]; then
             echo "RESOURCE_GROUP=${{ github.event.inputs.resource_group }}" >> $GITHUB_ENV
           else
-            echo "RESOURCE_GROUP=rg-${{ env.PROJECT_NAME }}-${{ github.event.inputs.environment }}" >> $GITHUB_ENV
+            # 実際に存在するリソースグループ名を使用
+            if [ "${{ github.event.inputs.environment }}" = "prod" ]; then
+              echo "RESOURCE_GROUP=MS-Lab-Proj-RG" >> $GITHUB_ENV
+            elif [ "${{ github.event.inputs.environment }}" = "test" ]; then
+              echo "RESOURCE_GROUP=MSLab-test" >> $GITHUB_ENV
+            else
+              echo "RESOURCE_GROUP=MS-Lab-Proj-RG" >> $GITHUB_ENV
+            fi
           fi
           echo "Using Resource Group: ${{ env.RESOURCE_GROUP }}"
 
